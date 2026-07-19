@@ -1,0 +1,113 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: gitserver
+      POSTGRES_USER: gitserver
+      POSTGRES_PASSWORD: gitserver
+    ports:
+      - "55632:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gitserver -d gitserver"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  praefect-postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: praefect
+      POSTGRES_USER: praefect
+      POSTGRES_PASSWORD: praefect
+    volumes:
+      - praefect-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U praefect -d praefect"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  gitaly-1:
+    image: registry.gitlab.com/gitlab-org/build/cng/gitaly:18-3-stable
+    environment: &gitaly-environment
+      GITALY_TESTING_NO_GIT_HOOKS: "1"
+      CONFIG_TEMPLATE_DIRECTORY: /config
+      CONFIG_DIRECTORY: /tmp/rendered-config
+      GITALY_CONFIG_FILE: /tmp/rendered-config/config.toml
+    ports:
+      - "8075:8075"
+    volumes:
+      - gitaly-1-data:/home/git/repositories
+      - ./config/gitaly-1:/config:ro
+    healthcheck: &gitaly-healthcheck
+      test: ["CMD", "/scripts/healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  gitaly-2:
+    image: registry.gitlab.com/gitlab-org/build/cng/gitaly:18-3-stable
+    environment: *gitaly-environment
+    ports:
+      - "8076:8075"
+    volumes:
+      - gitaly-2-data:/home/git/repositories
+      - ./config/gitaly-2:/config:ro
+    healthcheck: *gitaly-healthcheck
+
+  gitaly-3:
+    image: registry.gitlab.com/gitlab-org/build/cng/gitaly:18-3-stable
+    environment: *gitaly-environment
+    ports:
+      - "8077:8075"
+    volumes:
+      - gitaly-3-data:/home/git/repositories
+      - ./config/gitaly-3:/config:ro
+    healthcheck: *gitaly-healthcheck
+
+  praefect:
+    image: registry.gitlab.com/gitlab-org/build/cng/gitaly:18-3-stable
+    environment:
+      USE_PRAEFECT_SERVICE: "1"
+      PRAEFECT_AUTO_MIGRATE: "1"
+      CONFIG_TEMPLATE_DIRECTORY: /config
+      CONFIG_DIRECTORY: /tmp/rendered-config
+      PRAEFECT_CONFIG_FILE: /tmp/rendered-config/config.toml
+    ports:
+      - "2305:2305"
+      - "9652:9652"
+    volumes:
+      - ./config/praefect:/config:ro
+    depends_on:
+      praefect-postgres:
+        condition: service_healthy
+      gitaly-1:
+        condition: service_healthy
+      gitaly-2:
+        condition: service_healthy
+      gitaly-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ss -tulnp '( sport = :2305 )' | grep praefect"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  sidechannel-gateway:
+    build:
+      context: .
+      dockerfile: sidechannel-gateway/Dockerfile
+    ports:
+      - "8090:8090"
+    depends_on:
+      praefect:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  praefect-postgres-data:
+  gitaly-1-data:
+  gitaly-2-data:
+  gitaly-3-data:

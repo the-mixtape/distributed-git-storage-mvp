@@ -1,0 +1,13 @@
+@GitalyControlPlane.Web_HostAddress = http://localhost:5080
+
+GET {{GitalyControlPlane.Web_HostAddress}}/repositories
+Accept: application/json
+
+###
+
+POST {{GitalyControlPlane.Web_HostAddress}}/repositories
+Content-Type: application/json
+
+{
+  "name": "demo"
+}
