@@ -1,57 +1,57 @@
-# Gitaly Control Plane
+# C# Distributed Git Storage MVP
 
 [Русский](README.md) | **English**
 
+An MVP distributed Git storage system built with ASP.NET Core. System Git remains the storage engine, while the C# code implements the control plane, Git Smart HTTP, replication, and failover across three storage nodes.
+
 See the detailed [architecture](docs/architecture.en.md) and [demo runbook](docs/demo.en.md).
 
-A working proof of concept for a custom Git control plane. ASP.NET Core stores repository placement in PostgreSQL, creates repositories in a virtual Praefect storage, and exposes Git Smart HTTP for `push`, `fetch`, and `clone`. Praefect replicates every repository across three Gitaly nodes.
+## Features
+
+- bare repository creation through a REST API;
+- standard `git push`, `clone`, `fetch`, and `pull`;
+- synchronous ref replication across three C# storage nodes;
+- automatic selection of an available replica;
+- primary promotion after a write during an outage;
+- recovery of a stale node on the next write;
+- placement metadata in PostgreSQL;
+- health checks and automated tests.
 
 ## Architecture
 
 ```text
-Git client / REST client
-          |
-          v
-ASP.NET Core API ----------------------> Application PostgreSQL
-          |
-          +--> regular gRPC -----------+
-          |                            |
-          +--> sidechannel gateway ----+--> Praefect
-                                               |
-                                      +--------+--------+
-                                      |        |        |
-                                  Gitaly-1 Gitaly-2 Gitaly-3
-                                      \________|________/
-                                        repository replicas
-                                               |
-                                      Praefect PostgreSQL
+Git / REST client
+        |
+        v
+ASP.NET Core Control Plane ------> PostgreSQL
+        |
+        +--------+---------+
+        |        |         |
+        v        v         v
+   Storage-1 Storage-2 Storage-3
+       |        |         |
+       +--------+---------+
+          bare Git repositories
 ```
 
-ASP.NET stores the virtual storage name `cluster`, not a physical Gitaly node. Praefect selects the primary replica, coordinates writes, and tracks each replica generation.
-
-The .NET solution is located at `src/GitalyControlPlane.sln`.
-
-Gitaly 18 uses a Yamux sidechannel for `upload-pack`. A small Go adapter uses the official Gitaly client only for this transport protocol. Storage selection, placement lookup, and public Git URLs remain in ASP.NET.
+Each storage node is an ASP.NET Core application that runs safely argumentized `git init --bare`, `git upload-pack`, `git receive-pack`, and `git fetch` processes.
 
 ## Running locally
 
-.NET 9 and Docker Desktop running Linux containers are required.
+.NET 9, Git, and Docker Desktop running Linux containers are required.
 
 ```powershell
 docker compose up -d --build --wait
-dotnet restore src/GitalyControlPlane.sln
-dotnet run --project src/GitalyControlPlane.Web
+dotnet restore src/DistributedGitStorage.sln
+dotnet run --project src/DistributedGitStorage.Web
 ```
 
-The first sidechannel gateway build downloads Gitaly sources and Go dependencies. Subsequent builds use the Docker cache.
+Swagger: <http://localhost:5080/swagger>
+Readiness: <http://localhost:5080/health/ready>
 
-Swagger: <http://localhost:5080/swagger>.
+The Web application automatically applies pending EF Core migrations during startup.
 
-The Web application automatically applies pending migrations during startup.
-
-## Creating and using a repository
-
-Create a repository through the business API:
+## Create a repository
 
 ```powershell
 Invoke-RestMethod -Method Post `
@@ -60,90 +60,47 @@ Invoke-RestMethod -Method Post `
   -Body '{"name":"demo"}'
 ```
 
-Push a commit:
+## Git workflow
 
 ```powershell
 mkdir demo-source
-cd demo-source
-git init
-git commit --allow-empty -m "Initial commit"
-git branch -M main
-git remote add origin http://localhost:5080/demo.git
-git push -u origin main
-```
+git -C demo-source init
+git -C demo-source config user.name "Demo User"
+git -C demo-source config user.email "demo@example.com"
+"Hello" | Set-Content demo-source/README.md
+git -C demo-source add README.md
+git -C demo-source commit -m "Initial commit"
+git -C demo-source branch -M main
+git -C demo-source remote add origin http://localhost:5080/demo.git
+git -C demo-source push -u origin main
 
-Clone it:
-
-```powershell
 git clone http://localhost:5080/demo.git demo-clone
 ```
-
-## Checking replicas
-
-Take `relativePath` from the `POST /repositories` response and run:
-
-```powershell
-docker compose exec -T praefect `
-  /usr/local/bin/praefect `
-  -config /tmp/rendered-config/config.toml `
-  metadata `
-  -virtual-storage cluster `
-  -relative-path poc/REPOSITORY_ID.git
-```
-
-Every replica should report the same generation and `fully up to date` state.
-
-## Testing failover
-
-Use the metadata command to identify the current primary and stop that Gitaly node. For example:
-
-```powershell
-docker compose stop gitaly-2
-git clone http://localhost:5080/demo.git failover-clone
-git -C demo-source commit --allow-empty -m "Commit during outage"
-git -C demo-source push origin main
-```
-
-Praefect selects another up-to-date primary replica. Restore the node with:
-
-```powershell
-docker compose start gitaly-2
-docker compose up -d --wait gitaly-2
-```
-
-The replication worker delivers the missing changes. Running `metadata` again should show the same generation on every node.
 
 ## Services and ports
 
 | Service | Instances | Host port | Purpose |
 |---|---:|---:|---|
-| ASP.NET Core | 1 | 5080 | REST API and public Git Smart HTTP |
-| Application PostgreSQL | 1 | 55632 | Placement catalog |
-| Sidechannel gateway | 1 | 8090 | Gitaly upload-pack adapter |
-| Praefect | 1 | 2305 | Virtual storage, replication, and failover |
-| Praefect PostgreSQL | 1 | — | Metadata and replication queue |
-| Gitaly | 3 | 8075–8077 | Three physical replicas |
+| ASP.NET Core Control Plane | 1 | 5080 | REST API and public Git Smart HTTP |
+| PostgreSQL | 1 | 55632 | Placement metadata |
+| C# Storage Node | 3 | 8081–8083 | Bare Git repositories and internal Smart HTTP |
 
-The PoC runs seven Docker containers and one ASP.NET process.
+## Tests
+
+```powershell
+dotnet test src/DistributedGitStorage.sln
+```
 
 ## Stopping
 
-Stop containers while retaining databases and repositories:
+Keep the data:
 
 ```powershell
 docker compose down
 ```
 
-Delete all test data:
+Delete test databases and repositories:
 
 ```powershell
 docker compose down --volumes
 ```
-
-## Versions
-
-- Gitaly, Praefect, and sidechannel client: 18.3.6;
-- PostgreSQL: 16;
-- ASP.NET Core: .NET 9.
-
-Six Gitaly 18.3.6 protobuf contracts are committed as regular versioned files under `vendor/gitaly/proto`. This is intentionally not a Git submodule: the project does not need the complete Gitaly source repository, and the C# build remains reproducible without additional submodule initialization.
