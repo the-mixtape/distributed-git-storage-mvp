@@ -1,67 +1,37 @@
-# Architecture
+# C# Distributed Git Storage Architecture
 
-[Русская версия](architecture.md) | **English**
-
-## Purpose
-
-Gitaly Control Plane is a proof of concept for a horizontally scalable Git service. ASP.NET Core owns business metadata and public HTTP endpoints; Praefect owns repository replication and failover across physical Gitaly nodes.
+[Русский](architecture.md) | **English**
 
 ## Components
 
-```text
-REST / Git client
-       |
-       v
-GitalyControlPlane.Web
-       |
-       +--> GitalyControlPlane.Services --> Application PostgreSQL
-       |              |
-       |              +--> Praefect gRPC
-       |              +--> sidechannel gateway
-       |                         |
-       +-------------------------+
-                                 v
-                              Praefect
-                          /       |       \
-                    Gitaly-1  Gitaly-2  Gitaly-3
-```
+- **Web Control Plane** stores placement, exposes the REST API, and owns the public Git URL `/{name}.git`.
+- **PostgreSQL** maps repository name and ID to the current primary node.
+- **Storage Node** stores bare repositories and exposes internal management and Git Smart HTTP endpoints.
+- **System Git** performs object database, ref, and packfile operations.
 
-- **Web** exposes attribute-based REST controllers, Git Smart HTTP, Problem Details and health endpoints.
-- **Services** contains public application contracts and internal Gitaly implementations.
-- **Data** contains the EF Core model, mapping and migrations for placement metadata.
-- **Application PostgreSQL** maps a business repository ID/name to a virtual Praefect storage and relative path.
-- **Praefect** chooses the primary replica and coordinates writes, replication and failover.
-- **Gitaly** stores physical Git repositories. Three nodes are used in the PoC.
-- **Sidechannel gateway** adapts the Gitaly Yamux sidechannel required by upload-pack in the selected Gitaly version.
+## Creation
 
-## Repository creation
+The Control Plane selects a primary using round-robin placement, creates the same bare repository on every node, and then saves placement in PostgreSQL. A database failure triggers compensating deletion.
+
+## Reads
+
+For `clone`, `fetch`, and `pull`, the Control Plane checks the current primary first. If it is unavailable, the request is routed to the first healthy replica.
+
+## Writes and replication
+
+`git push` is routed to an available primary through `git receive-pack`. After a successful write, the other nodes execute:
 
 ```text
-POST /repositories
-       |
-       +--> validate and normalize name
-       +--> choose configured virtual storage
-       +--> create repository through Praefect
-       +--> save placement in PostgreSQL
+git fetch --prune --force <source-node> +refs/*:refs/*
 ```
 
-If saving placement fails, the service performs a compensating `RemoveRepository` call. This avoids leaving an untracked repository after the most common partial failure. A production system should additionally persist cleanup jobs and expose cleanup metrics.
+An unavailable replica does not block the write and is synchronized by the next push after recovery. If the write used a fallback node, that node becomes the new primary in PostgreSQL.
 
-## Git traffic
+## MVP guarantees
 
-The public URL is `/{name}.git`. The application resolves the placement by name and forwards Smart HTTP operations to the configured virtual storage. The client never receives a physical Gitaly address.
+- placement selects a single writer;
+- reachable replicas synchronize before push completes;
+- reads fail over to a healthy replica;
+- C# delegates the internal Git object/pack format to installed Git.
 
-## Source of truth
-
-- Business identity and placement: application PostgreSQL.
-- Git objects and refs: Gitaly repositories coordinated by Praefect.
-- Replica generation and replication queue: Praefect PostgreSQL.
-
-## Availability boundaries
-
-The three Gitaly nodes demonstrate repository failover. The PoC still has single instances of Web, Praefect, sidechannel gateway and both PostgreSQL databases. Production requires redundant Praefect/Web instances, load balancers, HA PostgreSQL, TLS, authentication, backups and monitoring.
-
-## Health endpoints
-
-- `/health/live` verifies that the Web process can serve requests.
-- `/health/ready` verifies application PostgreSQL, Praefect TCP connectivity and the sidechannel gateway.
+The MVP does not provide concurrent-push coordination, distributed locking, split-brain prevention, a durable replication job queue, or automatic background reconciliation. Those belong to a production phase.

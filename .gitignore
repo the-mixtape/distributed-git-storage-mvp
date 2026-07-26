@@ -5,14 +5,3 @@ obj/
 .e2e/
 *.user
 *.suo
-
-# Keep only the Gitaly protobuf contracts used by the C# client.
-vendor/gitaly/*
-!vendor/gitaly/proto/
-vendor/gitaly/proto/*
-!vendor/gitaly/proto/errors.proto
-!vendor/gitaly/proto/lint.proto
-!vendor/gitaly/proto/packfile.proto
-!vendor/gitaly/proto/repository.proto
-!vendor/gitaly/proto/shared.proto
-!vendor/gitaly/proto/smarthttp.proto

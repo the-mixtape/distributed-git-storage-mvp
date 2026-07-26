@@ -1,74 +1,49 @@
-# Demo runbook
+# C# Distributed Git Storage MVP Demo
 
-[Русская версия](demo.md) | **English**
+[Русский](demo.md) | **English**
 
-## 1. Start the cluster
+## 1. Start
 
 ```powershell
 docker compose up -d --build --wait
 docker compose ps
-dotnet run --project src/GitalyControlPlane.Web
+dotnet run --project src/DistributedGitStorage.Web
 ```
 
-Open Swagger at <http://localhost:5080/swagger> and readiness at <http://localhost:5080/health/ready>.
+## 2. Create and push
 
-## 2. Create a repository
+Create `demo` through Swagger or `POST /repositories`, then run the Git workflow from the README.
+
+## 3. Verify replicas
+
+Take the repository `id` from the API response, remove hyphens, and check each SHA:
 
 ```powershell
-$repository = Invoke-RestMethod -Method Post `
-  -Uri http://localhost:5080/repositories `
-  -ContentType application/json `
-  -Body '{"name":"demo"}'
-
-$repository | ConvertTo-Json
+docker compose exec -T storage-1 git -C /var/lib/git/repositories/ID.git rev-parse refs/heads/main
+docker compose exec -T storage-2 git -C /var/lib/git/repositories/ID.git rev-parse refs/heads/main
+docker compose exec -T storage-3 git -C /var/lib/git/repositories/ID.git rev-parse refs/heads/main
 ```
 
-Point out that the response contains virtual storage `cluster`, not a physical Gitaly node.
+All SHAs must match.
 
-## 3. Push and clone
-
-```powershell
-mkdir demo-source
-git -C demo-source init
-git -C demo-source commit --allow-empty -m "Initial commit"
-git -C demo-source branch -M main
-git -C demo-source remote add origin http://localhost:5080/demo.git
-git -C demo-source push -u origin main
-git clone http://localhost:5080/demo.git demo-clone
-```
-
-## 4. Show replicas
+## 4. Failover
 
 ```powershell
-docker compose exec -T praefect `
-  /usr/local/bin/praefect `
-  -config /tmp/rendered-config/config.toml `
-  metadata `
-  -virtual-storage cluster `
-  -relative-path $repository.relativePath
-```
-
-All three replicas should be fully up to date with the same generation.
-
-## 5. Demonstrate failover
-
-Use the metadata output to identify the current primary, then stop that Gitaly container. For example:
-
-```powershell
-docker compose stop gitaly-2
+docker compose stop storage-1
 git clone http://localhost:5080/demo.git failover-clone
 git -C demo-source commit --allow-empty -m "Commit during outage"
 git -C demo-source push origin main
-docker compose start gitaly-2
-docker compose up -d --wait gitaly-2
 ```
 
-Run the metadata command again after the replication worker catches up.
+`GET /repositories` now reports `storage-2` as primary.
 
-## 6. Run automated checks
+## 5. Recovery
 
 ```powershell
-dotnet test src/GitalyControlPlane.sln
+docker compose start storage-1
+docker compose up -d --wait storage-1
+git -C demo-source commit --allow-empty -m "Synchronize recovered replica"
+git -C demo-source push origin main
 ```
 
-The unit suite checks repository-name rules; the Web suite checks controllers and Problem Details without requiring Docker.
+Checking the SHAs again shows the same state on all three nodes.

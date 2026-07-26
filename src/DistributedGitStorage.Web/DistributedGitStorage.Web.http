@@ -1,0 +1,13 @@
+@DistributedGitStorage.Web_HostAddress = http://localhost:5080
+
+GET {{DistributedGitStorage.Web_HostAddress}}/repositories
+Accept: application/json
+
+###
+
+POST {{DistributedGitStorage.Web_HostAddress}}/repositories
+Content-Type: application/json
+
+{
+  "name": "demo"
+}

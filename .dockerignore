@@ -1,0 +1,8 @@
+**/bin/
+**/obj/
+.git/
+.e2e/
+.vs/
+.idea/
+tests/
+docs/
