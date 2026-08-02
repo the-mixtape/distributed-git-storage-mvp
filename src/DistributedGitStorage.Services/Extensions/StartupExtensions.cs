@@ -19,9 +19,17 @@ public static class StartupExtensions
 
         services.AddDbContextFactory<DistributedGitStorageDbContext>(options => options.UseNpgsql(connectionString));
         services.Configure<GitClusterOptions>(configuration.GetSection("GitCluster"));
+        services.AddOptions<ReplicationOptions>()
+            .Bind(configuration.GetSection("Replication"))
+            .Validate(options => options.WriteQuorum > 0, "WriteQuorum must be greater than zero.")
+            .Validate(options => options.WriteQuorumTimeoutSeconds > 0,
+                "WriteQuorumTimeoutSeconds must be greater than zero.")
+            .ValidateOnStart();
         services.AddSingleton<StorageClusterClient>();
         services.AddSingleton<IRepositoryService, RepositoryService>();
         services.AddSingleton<IGitSmartHttpService, GitSmartHttpService>();
+        services.AddSingleton<IReplicationService, ReplicationService>();
+        services.AddHostedService<ReplicationWorker>();
         services.AddHttpClient("GitStorageNode", client =>
         {
             client.Timeout = TimeSpan.FromMinutes(10);

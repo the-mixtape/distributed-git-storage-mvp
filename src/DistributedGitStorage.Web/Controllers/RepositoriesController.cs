@@ -22,6 +22,14 @@ public sealed class RepositoriesController(IRepositoryService repositoryService)
         return repository is null ? NotFound() : Ok(repository);
     }
 
+    [HttpGet("{id:guid}/replicas")]
+    [ProducesResponseType<IReadOnlyList<RepositoryReplicaInfo>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IReadOnlyList<RepositoryReplicaInfo>>> GetReplicas(
+        Guid id,
+        CancellationToken cancellationToken) =>
+        Ok(await repositoryService.GetReplicasAsync(id, cancellationToken));
+
     [HttpPost]
     [ProducesResponseType<RepositoryInfo>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]

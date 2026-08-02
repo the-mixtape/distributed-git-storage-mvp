@@ -10,11 +10,13 @@ See the detailed [architecture](docs/architecture.en.md) and [demo runbook](docs
 
 - bare repository creation through a REST API;
 - standard `git push`, `clone`, `fetch`, and `pull`;
-- synchronous ref replication across three C# storage nodes;
-- automatic selection of an available replica;
-- primary promotion after a write during an outage;
-- recovery of a stale node on the next write;
-- placement metadata in PostgreSQL;
+- background replication through a durable job queue;
+- generation and health tracking for every repository copy;
+- reads only from current healthy replicas;
+- automatic failover and recovery of lagging nodes;
+- serialization of concurrent pushes to the same repository;
+- write quorum: a push is acknowledged after two current physical copies exist;
+- placement, replica state, and replication jobs in PostgreSQL;
 - health checks and automated tests.
 
 ## Architecture
@@ -50,6 +52,14 @@ Swagger: <http://localhost:5080/swagger>
 Readiness: <http://localhost:5080/health/ready>
 
 The Web application automatically applies pending EF Core migrations during startup.
+
+Replica state is exposed by `GET /repositories/{id}/replicas`, and the queue by
+`GET /replication/jobs`. A failed job can be retried manually with
+`POST /replication/jobs/{id}/retry`.
+
+`Replication:WriteQuorum` defaults to `2`, bounded by
+`Replication:WriteQuorumTimeoutSeconds`. If quorum cannot be reached, the client does
+not receive a successful acknowledgement, while persisted jobs continue recovery in the background.
 
 ## Create a repository
 

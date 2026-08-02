@@ -49,6 +49,27 @@ public sealed class StorageNodeApiTests : IDisposable
         Assert.Equal("001e# service=git-upload-pack\n0000", prefix);
     }
 
+    [Fact]
+    public async Task RepositoryState_ReturnsStableRefsFingerprint()
+    {
+        var repositoryId = Guid.NewGuid();
+        using var createResponse = await _client.PostAsJsonAsync(
+            $"/internal/repositories/{repositoryId}",
+            new { defaultBranch = "main" });
+        createResponse.EnsureSuccessStatusCode();
+
+        var first = await _client.GetFromJsonAsync<RepositoryState>(
+            $"/internal/repositories/{repositoryId}/state");
+        var second = await _client.GetFromJsonAsync<RepositoryState>(
+            $"/internal/repositories/{repositoryId}/state");
+
+        Assert.NotNull(first);
+        Assert.True(first.Exists);
+        Assert.Equal("refs/heads/main", first.Head);
+        Assert.Equal(64, first.RefsHash?.Length);
+        Assert.Equal(first.RefsHash, second?.RefsHash);
+    }
+
     public void Dispose()
     {
         _client.Dispose();
@@ -59,6 +80,8 @@ public sealed class StorageNodeApiTests : IDisposable
         }
     }
 }
+
+internal sealed record RepositoryState(bool Exists, string? RefsHash, string? Head);
 
 public sealed class StorageNodeFactory : WebApplicationFactory<Program>
 {

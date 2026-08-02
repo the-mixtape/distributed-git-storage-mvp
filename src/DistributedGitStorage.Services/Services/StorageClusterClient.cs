@@ -28,6 +28,10 @@ internal sealed class StorageClusterClient
 
     public IReadOnlyList<GitStorageNodeOptions> Nodes { get; }
 
+    public GitStorageNodeOptions GetNode(string name) =>
+        Nodes.SingleOrDefault(node => node.Name == name)
+        ?? throw new InvalidOperationException($"Storage node '{name}' is not configured.");
+
     public async Task CreateOnAllNodesAsync(Guid repositoryId, CancellationToken cancellationToken)
     {
         var createdNodes = new List<GitStorageNodeOptions>();
@@ -96,6 +100,69 @@ internal sealed class StorageClusterClient
         throw new HttpRequestException("No healthy Git storage node is available.");
     }
 
+    public async Task<GitStorageNodeOptions?> GetFirstHealthyNodeAsync(
+        IEnumerable<string> orderedNodeNames,
+        CancellationToken cancellationToken)
+    {
+        foreach (var nodeName in orderedNodeNames.Distinct(StringComparer.Ordinal))
+        {
+            var node = GetNode(nodeName);
+            if (await IsHealthyAsync(node, cancellationToken))
+            {
+                return node;
+            }
+        }
+
+        return null;
+    }
+
+    public async Task<bool> IsHealthyAsync(
+        GitStorageNodeOptions node,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await CreateClient(node).GetAsync("/health", cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+        catch (HttpRequestException)
+        {
+            return false;
+        }
+    }
+
+    public async Task<RepositoryState> GetRepositoryStateAsync(
+        GitStorageNodeOptions node,
+        Guid repositoryId,
+        CancellationToken cancellationToken)
+    {
+        using var response = await CreateClient(node).GetAsync(
+            $"/internal/repositories/{repositoryId}/state",
+            cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return new RepositoryState(false, null, null);
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<RepositoryState>(cancellationToken)
+            ?? throw new HttpRequestException($"Storage node '{node.Name}' returned an empty state response.");
+    }
+
+    public async Task ReplicateToNodeAsync(
+        Guid repositoryId,
+        GitStorageNodeOptions sourceNode,
+        GitStorageNodeOptions targetNode,
+        CancellationToken cancellationToken)
+    {
+        var sourceUrl = $"{sourceNode.InternalAddress.TrimEnd('/')}/repositories/{repositoryId}.git";
+        using var response = await CreateClient(targetNode).PostAsJsonAsync(
+            $"/internal/repositories/{repositoryId}/replicate",
+            new { sourceUrl },
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<HttpResponseMessage> SendGitRequestAsync(
         GitStorageNodeOptions node,
         HttpRequestMessage request,
@@ -157,3 +224,5 @@ internal sealed class StorageClusterClient
         }
     }
 }
+
+internal sealed record RepositoryState(bool Exists, string? RefsHash, string? Head);

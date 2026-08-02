@@ -1,0 +1,1129 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36" pages="4">
+  <diagram id="overview" name="1. Архитектура">
+    <mxGraphModel dx="3454" dy="1201" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="zone-public" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#808080;dashed=1;fontStyle=1;fontSize=13;" value="" vertex="1">
+          <mxGeometry height="390" width="520" x="80" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-storage" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#808080;dashed=1;fontStyle=1;fontSize=13;" value="" vertex="1">
+          <mxGeometry height="680" width="610" x="970" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Распределённое Git-хранилище - компоненты и вызовы" vertex="1">
+          <mxGeometry height="40" width="800" x="300" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="client" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" value="&lt;b&gt;Git-клиент / REST-клиент&lt;/b&gt;&lt;br&gt;git push · clone · fetch · pull&lt;br&gt;POST /repositories" vertex="1">
+          <mxGeometry height="110" width="220" x="-180" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="web" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" value="&lt;b&gt;DistributedGitStorage.Web&lt;/b&gt;&lt;br&gt;Публичная точка входа HTTP&lt;br&gt;&lt;br&gt;RepositoriesController&lt;br&gt;GitSmartHttpController" vertex="1">
+          <mxGeometry height="170" width="250" x="210" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="services" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" value="&lt;b&gt;DistributedGitStorage.Services&lt;/b&gt;&lt;br&gt;Управляющий слой&lt;br&gt;&lt;br&gt;RepositoryService&lt;br&gt;GitSmartHttpService&lt;br&gt;StorageClusterClient" vertex="1">
+          <mxGeometry height="190" width="250" x="670" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;repository_placements&lt;br&gt;&lt;br&gt;ID репозитория&lt;br&gt;публичное имя&lt;br&gt;основная нода" vertex="1">
+          <mxGeometry height="150" width="190" x="700" y="570" as="geometry" />
+        </mxCell>
+        <mxCell id="n1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="&lt;b&gt;Нода хранения 1&lt;/b&gt;&lt;br&gt;ASP.NET Core&lt;br&gt;GitRepositoryStore&lt;br&gt;bare-репозитории&lt;br&gt;системный Git" vertex="1">
+          <mxGeometry height="140" width="220" x="1290" y="130" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="&lt;b&gt;Нода хранения 2&lt;/b&gt;&lt;br&gt;ASP.NET Core&lt;br&gt;GitRepositoryStore&lt;br&gt;bare-репозитории&lt;br&gt;системный Git" vertex="1">
+          <mxGeometry height="140" width="220" x="1290" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="n3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;" value="&lt;b&gt;Нода хранения 3&lt;/b&gt;&lt;br&gt;ASP.NET Core&lt;br&gt;GitRepositoryStore&lt;br&gt;bare-репозитории&lt;br&gt;системный Git" vertex="1">
+          <mxGeometry height="140" width="220" x="1290" y="460" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="client" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" target="web" value="REST + Git Smart HTTP">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="web" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" target="services" value="вызовы интерфейсов">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" target="db" value="EF Core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" target="n1" value="внутренний HTTP + Git Smart HTTP">
+          <mxGeometry relative="1" x="0.5464" y="20" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1070" y="365" />
+              <mxPoint x="1070" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" target="n2" value="внутренний HTTP + Git Smart HTTP">
+          <mxGeometry relative="1" x="0.4054" y="15" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points" />
+            <mxPoint x="920" y="357.5" as="sourcePoint" />
+            <mxPoint x="1230" y="372.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;" target="n3" value="внутренний HTTP + Git Smart HTTP">
+          <mxGeometry relative="1" x="0.5888" y="20" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1070" y="365" />
+              <mxPoint x="1070" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="&lt;b&gt;Разделение ответственности&lt;/b&gt;&lt;br&gt;Web: публичные контроллеры и HTTP-ответы&lt;br&gt;Services: размещение, маршрутизация, переключение и репликация&lt;br&gt;Нода хранения: локальный bare-репозиторий и процесс Git&lt;br&gt;PostgreSQL: только метаданные; Git-объекты хранятся на дисках нод" vertex="1">
+          <mxGeometry height="170" width="460" x="30" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="overview-summary" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;align=left;spacingLeft=10;" value="&lt;b&gt;Главная идея:&lt;/b&gt; клиент использует один URL, а управляющий слой выбирает физическую ноду, переключается при отказе и запускает репликацию." vertex="1">
+          <mxGeometry height="105" width="470" x="30" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-control" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#808080;dashed=1;fontStyle=1;fontSize=13;" value="" vertex="1">
+          <mxGeometry height="680" width="320" x="625" y="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="create" name="2. Создание репозитория">
+    <mxGraphModel dx="2282" dy="1334" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2100" pageHeight="1370" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="Создание репозитория - последовательность вызовов" vertex="1">
+          <mxGeometry height="40" width="1300" x="250" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p-client" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="REST-клиент" vertex="1">
+          <mxGeometry height="1080" width="210" x="15" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-controller" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="Web&lt;br&gt;RepositoriesController" vertex="1">
+          <mxGeometry height="1080" width="210" x="285" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-service" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="Services&lt;br&gt;RepositoryService" vertex="1">
+          <mxGeometry height="1080" width="255.5" x="552.75" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="note-7" parent="p-service" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;" value="7. Создать Guid и выбрать основную ноду: count % nodes.Count" vertex="1">
+          <mxGeometry height="75" width="300" x="-22.25" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="p-db" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="PostgreSQL&lt;br&gt;repository_placements" vertex="1">
+          <mxGeometry height="1080" width="210" x="870" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-cluster" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="Services&lt;br&gt;StorageClusterClient" vertex="1">
+          <mxGeometry height="1080" width="210" x="1135" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-nodes" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="Ноды хранения 1..3&lt;br&gt;RepositoriesController&lt;br&gt;GitRepositoryStore" vertex="1">
+          <mxGeometry height="1080" width="305" x="1445" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="9Jb53bVVTDa-PPFTvuC6-1" parent="p-nodes" style="swimlane;html=1;rounded=0;startSize=28;horizontal=1;fillColor=#a0522d;strokeColor=#6D1F00;dashed=1;fontStyle=1;fontSize=12;collapsible=0;fontColor=#ffffff;" value="цикл: для каждой настроенной ноды" vertex="1">
+          <mxGeometry height="260" width="945" x="-275" y="420" as="geometry" />
+        </mxCell>
+        <mxCell id="point-1-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="120" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="point-1-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="390" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="event-1" edge="1" parent="1" source="point-1-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;exitX=0;exitY=0;exitDx=0;exitDy=0;" target="p-controller" value="1. POST /repositories { name }">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="120.03" y="190" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-2-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="390" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="point-2-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="event-2" edge="1" parent="1" source="p-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-service" value="2. IRepositoryService.CreateAsync(name)">
+          <mxGeometry relative="1" x="0.0311" y="1" as="geometry">
+            <mxPoint y="1" as="offset" />
+            <Array as="points">
+              <mxPoint x="540" y="210" />
+              <mxPoint x="540" y="210" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-3-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="point-3-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="960" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="event-3" edge="1" parent="1" source="p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-db" value="3. AnyAsync(name) — проверить уникальность">
+          <mxGeometry relative="1" x="-0.0014" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="810" y="230" />
+              <mxPoint x="810" y="230" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-4-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="960" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="point-4-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="340" as="geometry" />
+        </mxCell>
+        <mxCell id="event-4" edge="1" parent="1" source="p-db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-service" value="4. Имя свободно">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="250" />
+              <mxPoint x="830" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-5-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="point-5-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="960" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="event-5" edge="1" parent="1" source="p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-db" value="5. CountAsync() — получить число репозиториев">
+          <mxGeometry relative="1" x="-0.0014" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="830" y="310" />
+              <mxPoint x="830" y="310" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-6-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="960" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="point-6-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="point-8-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="point-8-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1240" y="560" as="geometry" />
+        </mxCell>
+        <mxCell id="event-8" edge="1" parent="1" source="p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-cluster" value="8. CreateOnAllNodesAsync(repositoryId)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="960" y="470" />
+              <mxPoint x="960" y="470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-10-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1240" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="point-10-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1580" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="event-10" edge="1" parent="1" source="p-cluster" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-nodes" value="9. POST /internal/repositories/{id} { defaultBranch: main }">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1410" y="560" />
+              <mxPoint x="1410" y="560" />
+            </Array>
+            <mxPoint x="1580" y="630" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-11-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1580" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="point-11-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1920" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="event-11" edge="1" parent="1" source="p-nodes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-system-git" value="10. GitRepositoryStore запускает: git init --bare --initial-branch=main {id}.git">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1800" y="600" />
+              <mxPoint x="1800" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-12-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1580" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="point-12-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1240" y="750" as="geometry" />
+        </mxCell>
+        <mxCell id="event-12" edge="1" parent="1" source="p-nodes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-cluster" value="12. HTTP 204 No Content">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1430" y="680" />
+              <mxPoint x="1430" y="680" />
+            </Array>
+            <mxPoint x="1230" y="750" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-13-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1240" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="point-13-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="840" as="geometry" />
+        </mxCell>
+        <mxCell id="event-13" edge="1" parent="1" source="p-cluster" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-service" value="13. Все ноды успешно созданы">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="970" y="760" />
+              <mxPoint x="970" y="760" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-14-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="point-14-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="960" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="event-14" edge="1" parent="1" source="p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=12;" target="p-db" value="14. SaveChangesAsync(RepositoryPlacement)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="820" y="800" />
+              <mxPoint x="820" y="800" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-15-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="960" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="point-15-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="930" as="geometry" />
+        </mxCell>
+        <mxCell id="event-15" edge="1" parent="1" source="p-db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-service" value="15. Placement сохранён">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="840" y="830" />
+              <mxPoint x="840" y="830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-16-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="680" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="point-16-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="390" y="980" as="geometry" />
+        </mxCell>
+        <mxCell id="event-16" edge="1" parent="1" source="p-service" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-controller" value="16. RepositoryInfo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="500" y="880" />
+              <mxPoint x="500" y="880" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="point-17-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="390" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="point-17-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="120" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="event-17" edge="1" parent="1" source="p-controller" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-client" value="17. HTTP 201 Created + RepositoryInfo">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="250" y="920" />
+              <mxPoint x="250" y="920" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note-18" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" value="При ошибке создания выполняется удаление уже созданных копий. При ошибке записи в PostgreSQL выполняется попытка удаления репозитория со всех нод." vertex="1">
+          <mxGeometry height="120" width="500" x="1180" y="920" as="geometry" />
+        </mxCell>
+        <mxCell id="p-system-git" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=13;size=70;" value="Системный Git&lt;br&gt;локальный процесс на каждой ноде" vertex="1">
+          <mxGeometry height="1080" width="220" x="1910" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="event-6" edge="1" parent="1" source="p-db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-service" value="6. Количество репозиториев">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="830" y="330" />
+              <mxPoint x="830" y="330" />
+            </Array>
+            <mxPoint x="952.25" y="430" as="sourcePoint" />
+            <mxPoint x="680.3103448275865" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="event-git-create-response" edge="1" parent="1" source="p-system-git" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=12;" target="p-nodes" value="11. ExitCode 0 — bare-репозиторий создан">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1800" y="640" />
+              <mxPoint x="1800" y="640" />
+            </Array>
+            <mxPoint x="2010" y="629.38" as="sourcePoint" />
+            <mxPoint x="1737" y="629.38" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="create-result" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;align=left;spacingLeft=10;" value="&lt;b&gt;Результат:&lt;/b&gt;&lt;br&gt;bare-репозиторий создан на всех нодах, а его placement и выбранная основная нода сохранены в PostgreSQL." vertex="1">
+          <mxGeometry height="110" width="700" x="1280" y="1190" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="push" name="3. Git push и репликация">
+    <mxGraphModel dx="2416" dy="1413" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="2100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="git push - последовательность записи и репликации" vertex="1">
+          <mxGeometry height="40" width="1200" x="500" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p-client" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Git-клиент" vertex="1">
+          <mxGeometry height="1760" width="170" x="15" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-controller" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Web&lt;br&gt;GitSmartHttpController" vertex="1">
+          <mxGeometry height="1760" width="190" x="235" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-service" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Services&lt;br&gt;GitSmartHttpService" vertex="1">
+          <mxGeometry height="1760" width="190" x="465" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-db" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="PostgreSQL&lt;br&gt;RepositoryPlacement" vertex="1">
+          <mxGeometry height="1760" width="190" x="695" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-cluster" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Services&lt;br&gt;StorageClusterClient" vertex="1">
+          <mxGeometry height="1760" width="190" x="925" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-source" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Выбранная нода&lt;br&gt;GitRepositoryStore" vertex="1">
+          <mxGeometry height="1760" width="190" x="1165" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-source-git" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Системный Git&lt;br&gt;выбранной ноды" vertex="1">
+          <mxGeometry height="1760" width="190" x="1395" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-replicas" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Остальные ноды&lt;br&gt;GitRepositoryStore" vertex="1">
+          <mxGeometry height="1760" width="190" x="1635" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-replica-git" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Системный Git&lt;br&gt;ноды-реплики" vertex="1">
+          <mxGeometry height="1760" width="190" x="1895" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="stage-1" parent="1" style="swimlane;html=1;rounded=0;startSize=28;horizontal=1;fillColor=#1ba1e2;strokeColor=#006EAF;fontStyle=1;fontSize=12;collapsible=0;fontColor=#ffffff;" value="Этап 1: объявление refs для записи" vertex="1">
+          <mxGeometry height="600" width="2110" x="30" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="m-1-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="m-1-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="message-1" edge="1" parent="1" source="m-1-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-1-to" value="1. GET /repo.git/info/refs?service=git-receive-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-2-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="m-2-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="message-2" edge="1" parent="1" source="m-2-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-2-to" value="2. WriteInfoRefsAsync(name, service)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-3-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="m-3-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="790" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="message-3" edge="1" parent="1" source="m-3-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-3-to" value="3. Найти RepositoryPlacement по публичному имени">
+          <mxGeometry relative="1" x="0.0393" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-4-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="790" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="m-4-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="message-4" edge="1" parent="1" source="m-4-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-4-to" value="4. ID репозитория и предпочтительная основная нода">
+          <mxGeometry relative="1" x="-0.0393" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-5-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="m-5-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="message-5" edge="1" parent="1" source="m-5-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-5-to" value="5. GetAvailableNodeAsync(primary)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-6-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="m-6-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="message-6" edge="1" parent="1" source="m-6-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-6-to" value="6. GET /health">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-7-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="m-7-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="message-7" edge="1" parent="1" source="m-7-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-7-to" value="7. HTTP 200 OK">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-8-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="m-8-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="message-8" edge="1" parent="1" source="m-8-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-8-to" value="8. SendGitRequestAsync(info/refs)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-9-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="m-9-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="message-9" edge="1" parent="1" source="m-9-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-9-to" value="9. GET /repositories/{id}.git/info/refs?service=git-receive-pack">
+          <mxGeometry relative="1" x="0.0795" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-10-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="m-10-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1490" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="message-10" edge="1" parent="1" source="m-10-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-10-to" value="10. git receive-pack --stateless-rpc --advertise-refs {path}">
+          <mxGeometry relative="1" x="0.0393" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-11-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1490" y="575" as="geometry" />
+        </mxCell>
+        <mxCell id="m-11-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="575" as="geometry" />
+        </mxCell>
+        <mxCell id="message-11" edge="1" parent="1" source="m-11-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-11-to" value="11. Объявленные refs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-12-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="m-12-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="message-12" edge="1" parent="1" source="m-12-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-12-to" value="12. Git Smart HTTP advertisement">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-13-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="m-13-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="message-13" edge="1" parent="1" source="m-13-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-13-to" value="13. Поток ответа info/refs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-14-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="m-14-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="message-14" edge="1" parent="1" source="m-14-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-14-to" value="14. Поток ответа info/refs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-15-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="m-15-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="message-15" edge="1" parent="1" source="m-15-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-15-to" value="15. Список refs для записи">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="stage-2" parent="1" style="swimlane;html=1;rounded=0;startSize=28;horizontal=1;fillColor=#60a917;strokeColor=#2D7600;fontStyle=1;fontSize=12;collapsible=0;fontColor=#ffffff;" value="Этап 2: приём push, репликация и возможная смена основной ноды" vertex="1">
+          <mxGeometry height="980" width="2110" x="30" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="m-16-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="845" as="geometry" />
+        </mxCell>
+        <mxCell id="m-16-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="845" as="geometry" />
+        </mxCell>
+        <mxCell id="message-16" edge="1" parent="1" source="m-16-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-16-to" value="16. POST /repo.git/git-receive-pack + поток Git pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-17-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="880" as="geometry" />
+        </mxCell>
+        <mxCell id="m-17-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="880" as="geometry" />
+        </mxCell>
+        <mxCell id="message-17" edge="1" parent="1" source="m-17-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-17-to" value="17. ReceivePackAsync(name, requestBody)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-18-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="915" as="geometry" />
+        </mxCell>
+        <mxCell id="m-18-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="790" y="915" as="geometry" />
+        </mxCell>
+        <mxCell id="message-18" edge="1" parent="1" source="m-18-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-18-to" value="18. Повторно получить RepositoryPlacement">
+          <mxGeometry relative="1" x="0.0393" y="16" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-19-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="790" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="m-19-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="950" as="geometry" />
+        </mxCell>
+        <mxCell id="message-19" edge="1" parent="1" source="m-19-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-19-to" value="19. ID репозитория и предпочтительная основная нода">
+          <mxGeometry relative="1" x="-0.0393" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-20-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="m-20-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="message-20" edge="1" parent="1" source="m-20-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-20-to" value="20. GetAvailableNodeAsync(primary)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-21-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="m-21-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1020" as="geometry" />
+        </mxCell>
+        <mxCell id="message-21" edge="1" parent="1" source="m-21-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-21-to" value="21. GET /health: primary, затем реплики">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-22-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1055" as="geometry" />
+        </mxCell>
+        <mxCell id="m-22-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1055" as="geometry" />
+        </mxCell>
+        <mxCell id="message-22" edge="1" parent="1" source="m-22-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-22-to" value="22. HTTP 200 OK">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-23-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="m-23-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="message-23" edge="1" parent="1" source="m-23-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-23-to" value="23. SendGitRequestAsync(git-receive-pack)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-24-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1125" as="geometry" />
+        </mxCell>
+        <mxCell id="m-24-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1125" as="geometry" />
+        </mxCell>
+        <mxCell id="message-24" edge="1" parent="1" source="m-24-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-24-to" value="24. POST /repositories/{id}.git/git-receive-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-25-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="m-25-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1490" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="message-25" edge="1" parent="1" source="m-25-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-25-to" value="25. git receive-pack --stateless-rpc {path}">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-26-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1490" y="1195" as="geometry" />
+        </mxCell>
+        <mxCell id="m-26-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1195" as="geometry" />
+        </mxCell>
+        <mxCell id="message-26" edge="1" parent="1" source="m-26-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-26-to" value="26. Результат receive-pack / ExitCode 0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-27-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="m-27-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1230" as="geometry" />
+        </mxCell>
+        <mxCell id="message-27" edge="1" parent="1" source="m-27-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-27-to" value="27. Результат receive-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-28-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1265" as="geometry" />
+        </mxCell>
+        <mxCell id="m-28-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="1265" as="geometry" />
+        </mxCell>
+        <mxCell id="message-28" edge="1" parent="1" source="m-28-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-28-to" value="28. Результат сохраняется в буфер">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-29-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="m-29-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1300" as="geometry" />
+        </mxCell>
+        <mxCell id="message-29" edge="1" parent="1" source="m-29-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-29-to" value="29. ReplicateAsync(id, sourceNode)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-30-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1335" as="geometry" />
+        </mxCell>
+        <mxCell id="m-30-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1730" y="1335" as="geometry" />
+        </mxCell>
+        <mxCell id="message-30" edge="1" parent="1" source="m-30-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-30-to" value="30. POST /internal/repositories/{id}/replicate { sourceUrl }">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-31-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1730" y="1370" as="geometry" />
+        </mxCell>
+        <mxCell id="m-31-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1990" y="1370" as="geometry" />
+        </mxCell>
+        <mxCell id="message-31" edge="1" parent="1" source="m-31-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-31-to" value="31. git fetch --prune --force sourceUrl +refs/*:refs/*">
+          <mxGeometry relative="1" x="-0.0039" y="11" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-32-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1990" y="1405" as="geometry" />
+        </mxCell>
+        <mxCell id="m-32-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1405" as="geometry" />
+        </mxCell>
+        <mxCell id="message-32" edge="1" parent="1" source="m-32-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-32-to" value="32. Git Smart HTTP: info/refs + git-upload-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-33-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1440" as="geometry" />
+        </mxCell>
+        <mxCell id="m-33-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1490" y="1440" as="geometry" />
+        </mxCell>
+        <mxCell id="message-33" edge="1" parent="1" source="m-33-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-33-to" value="33. git upload-pack --stateless-rpc {path}">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-34-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1490" y="1475" as="geometry" />
+        </mxCell>
+        <mxCell id="m-34-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1475" as="geometry" />
+        </mxCell>
+        <mxCell id="message-34" edge="1" parent="1" source="m-34-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-34-to" value="34. Поток Git pack возвращается в HTTP endpoint выбранной ноды">
+          <mxGeometry relative="1" x="-0.0393" y="-15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-pack-http-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1260" y="1510" as="geometry" />
+        </mxCell>
+        <mxCell id="m-pack-http-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1990" y="1510" as="geometry" />
+        </mxCell>
+        <mxCell id="message-pack-http" edge="1" parent="1" source="m-pack-http-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-pack-http-to" value="35. HTTP-ответ с Git pack передаётся процессу git fetch реплики">
+          <mxGeometry relative="1" x="-0.0151" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-35-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1990" y="1545" as="geometry" />
+        </mxCell>
+        <mxCell id="m-35-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1730" y="1545" as="geometry" />
+        </mxCell>
+        <mxCell id="message-35" edge="1" parent="1" source="m-35-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-35-to" value="36. Реплика синхронизирована / ExitCode 0">
+          <mxGeometry relative="1" x="0.0039" y="-15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-36-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1730" y="1580" as="geometry" />
+        </mxCell>
+        <mxCell id="m-36-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1020" y="1580" as="geometry" />
+        </mxCell>
+        <mxCell id="message-36" edge="1" parent="1" source="m-36-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-36-to" value="37. HTTP 204 No Content">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-37-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="1615" as="geometry" />
+        </mxCell>
+        <mxCell id="m-37-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="790" y="1615" as="geometry" />
+        </mxCell>
+        <mxCell id="message-37" edge="1" parent="1" source="m-37-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="m-37-to" value="38. Если запись приняла реплика: обновить RepositoryPlacement.Storage">
+          <mxGeometry relative="1" x="0.0393" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-38-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="790" y="1650" as="geometry" />
+        </mxCell>
+        <mxCell id="m-38-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="1650" as="geometry" />
+        </mxCell>
+        <mxCell id="message-38" edge="1" parent="1" source="m-38-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-38-to" value="39. SaveChangesAsync завершён">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="m-39-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="560" y="1685" as="geometry" />
+        </mxCell>
+        <mxCell id="m-39-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="1685" as="geometry" />
+        </mxCell>
+        <mxCell id="message-39" edge="1" parent="1" source="m-39-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-39-to" value="40. Буферизованный результат receive-pack">
+          <mxGeometry relative="1" x="-0.0393" y="-16" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m-40-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="330" y="1720" as="geometry" />
+        </mxCell>
+        <mxCell id="m-40-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="1720" as="geometry" />
+        </mxCell>
+        <mxCell id="message-40" edge="1" parent="1" source="m-40-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="m-40-to" value="41. Результат git push">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="replication-error" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;alt [реплика недоступна]&lt;/b&gt;&lt;br&gt;StorageClusterClient перехватывает HttpRequestException, записывает Warning и продолжает. Успешный push не откатывается." vertex="1">
+          <mxGeometry height="110" width="590" x="1510" y="1060" as="geometry" />
+        </mxCell>
+        <mxCell id="push-alt-primary" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;align=left;spacingLeft=10;" value="&lt;b&gt;alt [primary недоступна]&lt;/b&gt;&lt;br&gt;GetAvailableNodeAsync проверяет реплики по порядку. Первая доступная реплика принимает push и затем сохраняется как новая основная нода." vertex="1">
+          <mxGeometry height="130" width="650" x="700" y="1870" as="geometry" />
+        </mxCell>
+        <mxCell id="push-result" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;align=left;spacingLeft=10;" value="&lt;b&gt;Результат:&lt;/b&gt;&lt;br&gt;push принят выбранной нодой, доступные реплики синхронизированы, а при failover placement обновлён." vertex="1">
+          <mxGeometry height="130" width="680" x="1420" y="1870" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="read" name="4. Clone, fetch и pull">
+    <mxGraphModel dx="2054" dy="1201" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1950" pageHeight="1780" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=24;fontStyle=1;" value="git clone / fetch / pull - последовательность чтения и переключения" vertex="1">
+          <mxGeometry height="40" width="1250" x="350" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="p-client" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Git-клиент" vertex="1">
+          <mxGeometry height="1460" width="170" x="15" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-controller" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Web&lt;br&gt;GitSmartHttpController" vertex="1">
+          <mxGeometry height="1460" width="200" x="250" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-service" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Services&lt;br&gt;GitSmartHttpService" vertex="1">
+          <mxGeometry height="1460" width="200" x="510" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-db" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="PostgreSQL&lt;br&gt;RepositoryPlacement" vertex="1">
+          <mxGeometry height="1460" width="200" x="770" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-cluster" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Services&lt;br&gt;StorageClusterClient" vertex="1">
+          <mxGeometry height="1460" width="200" x="1030" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-node" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Выбранная нода&lt;br&gt;GitRepositoryStore" vertex="1">
+          <mxGeometry height="1460" width="220" x="1310" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p-git" parent="1" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fontStyle=1;fontSize=12;size=70;" value="Системный Git&lt;br&gt;локальный процесс на ноде" vertex="1">
+          <mxGeometry height="1460" width="230" x="1635" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="read-stage-1" parent="1" style="swimlane;html=1;rounded=0;startSize=28;horizontal=1;fillColor=#1ba1e2;strokeColor=#006EAF;fontStyle=1;fontSize=12;collapsible=0;fontColor=#ffffff;" value="Этап 1: объявление refs для чтения" vertex="1">
+          <mxGeometry height="610" width="1870" x="30" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="r-1-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="r-1-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-1" edge="1" parent="1" source="r-1-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-1-to" value="1. GET /repo.git/info/refs?service=git-upload-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-2-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="r-2-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-2" edge="1" parent="1" source="r-2-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-2-to" value="2. WriteInfoRefsAsync(name, service)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-3-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="r-3-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="870" y="295" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-3" edge="1" parent="1" source="r-3-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-3-to" value="3. Найти RepositoryPlacement по публичному имени">
+          <mxGeometry relative="1" x="-0.0039" y="15" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r-4-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="870" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="r-4-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-4" edge="1" parent="1" source="r-4-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-4-to" value="4. ID репозитория и предпочтительная основная нода">
+          <mxGeometry relative="1" x="0.0039" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r-5-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="r-5-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-5" edge="1" parent="1" source="r-5-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-5-to" value="5. GetAvailableNodeAsync(primary)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-6-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="r-6-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-6" edge="1" parent="1" source="r-6-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-6-to" value="6. GET /health: сначала primary, затем реплики">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-7-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="r-7-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="435" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-7" edge="1" parent="1" source="r-7-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-7-to" value="7. HTTP 200 OK">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-8-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="r-8-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-8" edge="1" parent="1" source="r-8-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-8-to" value="8. SendGitRequestAsync(info/refs)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-9-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="r-9-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="505" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-9" edge="1" parent="1" source="r-9-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-9-to" value="9. GET /repositories/{id}.git/info/refs?service=git-upload-pack">
+          <mxGeometry relative="1" x="0.0311" y="16" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r-10-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="r-10-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1750" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-10" edge="1" parent="1" source="r-10-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-10-to" value="10. git upload-pack --stateless-rpc --advertise-refs {path}">
+          <mxGeometry relative="1" x="0.002" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r-11-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1750" y="575" as="geometry" />
+        </mxCell>
+        <mxCell id="r-11-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="575" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-11" edge="1" parent="1" source="r-11-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-11-to" value="11. Объявленные refs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-12-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="r-12-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-12" edge="1" parent="1" source="r-12-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-12-to" value="12. Git Smart HTTP advertisement">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-13-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="r-13-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="645" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-13" edge="1" parent="1" source="r-13-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-13-to" value="13. Поток ответа info/refs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-14-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="r-14-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-14" edge="1" parent="1" source="r-14-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-14-to" value="14. Поток ответа info/refs">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-15-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="r-15-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="715" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-15" edge="1" parent="1" source="r-15-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-15-to" value="15. Список refs для чтения">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="read-stage-2" parent="1" style="swimlane;html=1;rounded=0;startSize=28;horizontal=1;fillColor=#60a917;strokeColor=#2D7600;fontStyle=1;fontSize=12;collapsible=0;fontColor=#ffffff;" value="Этап 2: передача Git-объектов" vertex="1">
+          <mxGeometry height="610" width="1870" x="30" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="r-16-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="855" as="geometry" />
+        </mxCell>
+        <mxCell id="r-16-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="855" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-16" edge="1" parent="1" source="r-16-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-16-to" value="16. POST /repo.git/git-upload-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-17-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="r-17-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-17" edge="1" parent="1" source="r-17-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-17-to" value="17. UploadPackAsync(name, requestBody)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-18-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="925" as="geometry" />
+        </mxCell>
+        <mxCell id="r-18-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="870" y="925" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-18" edge="1" parent="1" source="r-18-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-18-to" value="18. Повторно получить RepositoryPlacement">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-19-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="870" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="r-19-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="960" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-19" edge="1" parent="1" source="r-19-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-19-to" value="19. ID репозитория и предпочтительная основная нода">
+          <mxGeometry relative="1" x="0.0039" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r-20-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="995" as="geometry" />
+        </mxCell>
+        <mxCell id="r-20-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="995" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-20" edge="1" parent="1" source="r-20-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-20-to" value="20. GetAvailableNodeAsync(primary)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-21-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="r-21-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-21" edge="1" parent="1" source="r-21-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-21-to" value="21. GET /health: сначала primary, затем реплики">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-22-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="1065" as="geometry" />
+        </mxCell>
+        <mxCell id="r-22-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="1065" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-22" edge="1" parent="1" source="r-22-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-22-to" value="22. HTTP 200 OK">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-23-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="r-23-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-23" edge="1" parent="1" source="r-23-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-23-to" value="23. SendGitRequestAsync(git-upload-pack)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-24-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="1135" as="geometry" />
+        </mxCell>
+        <mxCell id="r-24-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="1135" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-24" edge="1" parent="1" source="r-24-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-24-to" value="24. POST /repositories/{id}.git/git-upload-pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-25-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="r-25-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1750" y="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-25" edge="1" parent="1" source="r-25-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=11;" target="r-25-to" value="25. git upload-pack --stateless-rpc {path}">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-26-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1750" y="1205" as="geometry" />
+        </mxCell>
+        <mxCell id="r-26-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="1205" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-26" edge="1" parent="1" source="r-26-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-26-to" value="26. Поток Git pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-27-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1420" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="r-27-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-27" edge="1" parent="1" source="r-27-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-27-to" value="27. HTTP-ответ с Git pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-28-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="1130" y="1275" as="geometry" />
+        </mxCell>
+        <mxCell id="r-28-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="1275" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-28" edge="1" parent="1" source="r-28-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-28-to" value="28. Поток Git pack">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-29-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="610" y="1310" as="geometry" />
+        </mxCell>
+        <mxCell id="r-29-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="1310" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-29" edge="1" parent="1" source="r-29-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-29-to" value="29. Проксировать поток ответа">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r-30-from" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="350" y="1345" as="geometry" />
+        </mxCell>
+        <mxCell id="r-30-to" parent="1" style="ellipse;opacity=0;fillOpacity=0;strokeOpacity=0;" value="" vertex="1">
+          <mxGeometry height="1" width="1" x="100" y="1345" as="geometry" />
+        </mxCell>
+        <mxCell id="read-message-30" edge="1" parent="1" source="r-30-from" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;dashPattern=6 6;endArrow=open;endFill=0;fontSize=11;" target="r-30-to" value="30. Git pack для clone / fetch / pull">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="read-failover" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;alt [все ноды недоступны]&lt;/b&gt;&lt;br&gt;StorageClusterClient выбрасывает HttpRequestException. Исключение поднимается до GlobalExceptionHandler, который возвращает Git-клиенту HTTP 503 Service Unavailable." vertex="1">
+          <mxGeometry height="90" width="770" x="1030" y="1435" as="geometry" />
+        </mxCell>
+        <mxCell id="read-balancing" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" value="&lt;b&gt;alt [primary недоступна]&lt;/b&gt;&lt;br&gt;Выбирается первая доступная реплика. Пока primary доступна, чтения идут на неё; реплики не используются для балансировки чтения." vertex="1">
+          <mxGeometry height="90" width="700" x="180" y="1435" as="geometry" />
+        </mxCell>
+        <mxCell id="read-result" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;align=left;spacingLeft=10;" value="&lt;b&gt;Результат:&lt;/b&gt;&lt;br&gt;клиент получает refs и Git-объекты с первой доступной ноды, не меняя публичный URL репозитория." vertex="1">
+          <mxGeometry height="125" width="600" x="1280" y="1580" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

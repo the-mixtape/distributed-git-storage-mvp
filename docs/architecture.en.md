@@ -5,7 +5,7 @@
 ## Components
 
 - **Web Control Plane** stores placement, exposes the REST API, and owns the public Git URL `/{name}.git`.
-- **PostgreSQL** maps repository name and ID to the current primary node.
+- **PostgreSQL** stores placement, current generation, replica state, and the replication queue.
 - **Storage Node** stores bare repositories and exposes internal management and Git Smart HTTP endpoints.
 - **System Git** performs object database, ref, and packfile operations.
 
@@ -15,23 +15,28 @@ The Control Plane selects a primary using round-robin placement, creates the sam
 
 ## Reads
 
-For `clone`, `fetch`, and `pull`, the Control Plane checks the current primary first. If it is unavailable, the request is routed to the first healthy replica.
+For `clone`, `fetch`, and `pull`, the Control Plane only selects a `Healthy` replica whose applied generation equals the repository's current generation. It checks the primary first and then other current copies. If none is available, it returns `503`; stale repository data is never served.
 
 ## Writes and replication
 
-`git push` is routed to an available primary through `git receive-pack`. After a successful write, the other nodes execute:
+Before `git push`, the Control Plane acquires a PostgreSQL advisory lock scoped to the repository. This prevents two application instances from changing its refs concurrently. It then reloads placement and selects an available current replica.
+
+Before mutating Git, a new generation is recorded and replicas are marked as awaiting synchronization. After a successful `git receive-pack`, the source refs fingerprint is persisted as current and durable replication jobs are created for the other nodes. The Control Plane then synchronously replicates and verifies copies until `WriteQuorum` is reached (2 by default). Only then is the push acknowledged.
+
+A background worker claims jobs using a lease and runs on each target:
 
 ```text
 git fetch --prune --force <source-node> +refs/*:refs/*
 ```
 
-An unavailable replica does not block the write and is synchronized by the next push after recovery. If the write used a fallback node, that node becomes the new primary in PostgreSQL.
+The worker verifies that source and target fingerprints match. A matching copy becomes `Healthy` at the current generation. Failures are retained with exponential backoff and the replica becomes `Lagging` or `Unavailable`. Reconciliation recreates missing work after a restart. If the original source disappears, another current healthy copy can be used.
 
 ## MVP guarantees
 
-- placement selects a single writer;
-- reachable replicas synchronize before push completes;
-- reads fail over to a healthy replica;
+- concurrent writes to one repository are serialized with a PostgreSQL advisory lock;
+- an acknowledged push has at least `WriteQuorum` current physical copies;
+- stale copies are excluded from reads and cannot silently become primary;
+- the queue survives restarts and supports leases, retries, and reconciliation;
 - C# delegates the internal Git object/pack format to installed Git.
 
-The MVP does not provide concurrent-push coordination, distributed locking, split-brain prevention, a durable replication job queue, or automatic background reconciliation. Those belong to a production phase.
+Replication up to quorum is synchronous; remaining copies are asynchronous. If quorum is not reached within `WriteQuorumTimeoutSeconds`, the client receives a Git protocol-level error containing the repository ID, generation, and current copy count. The primary may already have accepted refs, so the outcome is indeterminate until checked or safely retried; the durable queue keeps synchronizing in the background.

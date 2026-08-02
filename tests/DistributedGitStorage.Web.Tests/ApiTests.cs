@@ -41,6 +41,30 @@ public sealed class ApiTests : IClassFixture<ApiFactory>
         Assert.True(response.StatusCode == HttpStatusCode.BadRequest, await response.Content.ReadAsStringAsync());
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
+
+    [Fact]
+    public async Task GetRepositoryReplicas_ReturnsReplicaState()
+    {
+        var replicas = await _client.GetFromJsonAsync<RepositoryReplicaInfo[]>(
+            "/repositories/11111111-1111-1111-1111-111111111111/replicas");
+
+        Assert.NotNull(replicas);
+        Assert.Empty(replicas);
+    }
+
+    [Fact]
+    public async Task ReceivePack_WhenWriteQuorumIsNotReached_ReturnsGitProtocolError()
+    {
+        using var content = new ByteArrayContent([]);
+        content.Headers.ContentType = new("application/x-git-receive-pack-request");
+
+        using var response = await _client.PostAsync("/quorum-failure.git/git-receive-pack", content);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("application/x-git-receive-pack-result", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("1/2", response.Headers.GetValues("X-Git-Write-Quorum").Single());
+        Assert.Contains("check replica state or retry the push", await response.Content.ReadAsStringAsync());
+    }
 }
 
 public sealed class ApiFactory : WebApplicationFactory<Program>
@@ -56,7 +80,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.ConfigureAppConfiguration((_, configuration) =>
             configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["Database:ApplyMigrations"] = "false"
+                ["Database:ApplyMigrations"] = "false",
+                ["Replication:Enabled"] = "false"
             }));
         builder.ConfigureTestServices(services =>
         {
@@ -78,11 +103,17 @@ internal sealed class FakeRepositoryService : IRepositoryService
     public Task<RepositoryInfo?> GetAsync(Guid id, CancellationToken cancellationToken) => Task.FromResult<RepositoryInfo?>(id == Demo.Id ? Demo : null);
     public Task<RepositoryInfo> CreateAsync(string name, CancellationToken cancellationToken) =>
         name.Contains(' ') ? throw new InvalidRepositoryNameException() : Task.FromResult(Demo with { Id = Guid.NewGuid(), Name = name });
+    public Task<IReadOnlyList<RepositoryReplicaInfo>> GetReplicasAsync(Guid id, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<RepositoryReplicaInfo>>([]);
 }
 
 internal sealed class FakeGitSmartHttpService : IGitSmartHttpService
 {
     public Task WriteInfoRefsAsync(string name, string service, string gitProtocol, Stream responseBody, CancellationToken cancellationToken) => Task.CompletedTask;
-    public Task ReceivePackAsync(string name, string gitProtocol, Stream requestBody, Stream responseBody, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task ReceivePackAsync(string name, string gitProtocol, Stream requestBody, Stream responseBody, CancellationToken cancellationToken) =>
+        name == "quorum-failure"
+            ? throw new WriteQuorumNotReachedException(
+                Guid.Parse("11111111-1111-1111-1111-111111111111"), 2, 1, 2)
+            : Task.CompletedTask;
     public Task UploadPackAsync(string name, string gitProtocol, Stream requestBody, Stream responseBody, CancellationToken cancellationToken) => Task.CompletedTask;
 }
