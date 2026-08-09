@@ -9,5 +9,6 @@ public sealed class StoragesController(IRepositoryService repositoryService) : C
 {
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<StorageInfo>>(StatusCodes.Status200OK)]
-    public ActionResult<IReadOnlyList<StorageInfo>> Get() => Ok(repositoryService.GetStorages());
+    public async Task<ActionResult<IReadOnlyList<StorageInfo>>> Get(CancellationToken cancellationToken) =>
+        Ok(await repositoryService.GetStoragesAsync(cancellationToken));
 }

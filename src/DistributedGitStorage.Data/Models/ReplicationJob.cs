@@ -1,3 +1,5 @@
+using DistributedGitStorage.Data.Enums;
+
 namespace DistributedGitStorage.Data.Models;
 
 public sealed class ReplicationJob
@@ -7,7 +9,7 @@ public sealed class ReplicationJob
     public required string SourceNode { get; set; }
     public required string TargetNode { get; set; }
     public long Generation { get; set; }
-    public ReplicationJobStatus Status { get; set; }
+    public EReplicationJobStatus Status { get; set; }
     public int Attempt { get; set; }
     public DateTimeOffset NextAttemptAt { get; set; }
     public DateTimeOffset? LockedUntil { get; set; }

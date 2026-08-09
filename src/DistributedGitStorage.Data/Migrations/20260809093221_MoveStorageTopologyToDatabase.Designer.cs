@@ -3,6 +3,7 @@ using System;
 using DistributedGitStorage.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DistributedGitStorage.Data.Migrations
 {
     [DbContext(typeof(DistributedGitStorageDbContext))]
-    partial class DistributedGitStorageDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260809093221_MoveStorageTopologyToDatabase")]
+    partial class MoveStorageTopologyToDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

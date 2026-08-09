@@ -16,7 +16,7 @@ See the detailed [architecture](docs/architecture.en.md) and [demo runbook](docs
 - automatic failover and recovery of lagging nodes;
 - serialization of concurrent pushes to the same repository;
 - write quorum: a push is acknowledged after two current physical copies exist;
-- placement, replica state, and replication jobs in PostgreSQL;
+- clusters, nodes, placement, replica state, and replication jobs in PostgreSQL;
 - health checks and automated tests.
 
 ## Architecture
@@ -54,6 +54,34 @@ The Web application automatically applies pending EF Core migrations during star
 Replica state is exposed by `GET /repositories/{id}/replicas`, and the queue by
 `GET /replication/jobs`. A failed job can be retried manually with
 `POST /replication/jobs/{id}/retry`.
+
+Storage topology is no longer configured in `appsettings.json`. Clusters and nodes
+are stored in PostgreSQL and exposed by `GET /storage-clusters`. They can be managed
+with `POST /storage-clusters`, `PUT /storage-clusters/{id}`,
+`POST /storage-clusters/{id}/nodes`, and `PUT /storage-clusters/{id}/nodes/{nodeId}`.
+
+The topology is empty after the first startup. Create a cluster and add its nodes explicitly before creating repositories:
+
+```powershell
+$cluster = Invoke-RestMethod -Method Post `
+  -Uri http://localhost:5080/storage-clusters `
+  -ContentType application/json `
+  -Body '{"name":"main-cluster"}'
+
+1..3 | ForEach-Object {
+  $name = "storage-$_"
+  Invoke-RestMethod -Method Post `
+    -Uri "http://localhost:5080/storage-clusters/$($cluster.id)/nodes" `
+    -ContentType application/json `
+    -Body (@{
+      name = $name
+      address = "http://${name}:8080"
+      internalAddress = "http://${name}:8080"
+    } | ConvertTo-Json)
+}
+```
+
+Until at least one active node is configured, `/health/ready` correctly reports that the service is not ready.
 
 `Replication:WriteQuorum` defaults to `2`, bounded by
 `Replication:WriteQuorumTimeoutSeconds`. If quorum cannot be reached, the client does

@@ -19,5 +19,9 @@ internal sealed class RepositoryPlacementConfiguration : IEntityTypeConfiguratio
         builder.HasIndex(item => item.Name)
             .IsUnique()
             .HasDatabaseName("uq_repository_placements_name");
+        builder.HasOne(item => item.StorageCluster)
+            .WithMany(item => item.RepositoryPlacements)
+            .HasForeignKey(item => item.StorageClusterId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

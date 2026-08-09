@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using DistributedGitStorage.Data;
+using DistributedGitStorage.Data.Enums;
 using DistributedGitStorage.Data.Models;
 using DistributedGitStorage.Services.Exceptions;
 using DistributedGitStorage.Services.Interfaces;
@@ -62,7 +63,7 @@ internal sealed class GitSmartHttpService(
             placement.Storage = node.Name;
             foreach (var replica in placement.Replicas)
             {
-                replica.Status = RepositoryReplicaStatus.Pending;
+                replica.Status = ERepositoryReplicaStatus.Pending;
                 replica.LastError = null;
             }
 
@@ -86,17 +87,22 @@ internal sealed class GitSmartHttpService(
 
             var sourceReplica = placement.Replicas.Single(item => item.StorageNode == node.Name);
             sourceReplica.AppliedGeneration = placement.CurrentGeneration;
-            sourceReplica.Status = RepositoryReplicaStatus.Healthy;
+            sourceReplica.Status = ERepositoryReplicaStatus.Healthy;
             sourceReplica.RefsHash = sourceState.RefsHash;
             sourceReplica.LastSuccessfulReplicationAt = DateTimeOffset.UtcNow;
-            ReplicationWorker.EnsureJobs(dbContext, placement, node.Name);
+            var activeNodes = await cluster.GetNodesAsync(placement.StorageClusterId, cancellationToken);
+            ReplicationWorker.EnsureJobs(
+                dbContext,
+                placement,
+                node.Name,
+                activeNodes.Select(item => item.Name).ToHashSet(StringComparer.Ordinal));
             var reservedUntil = DateTimeOffset.UtcNow.AddSeconds(
                 replicationOptions.Value.WriteQuorumTimeoutSeconds + replicationOptions.Value.LeaseSeconds);
             foreach (var jobEntry in dbContext.ChangeTracker.Entries<ReplicationJob>()
                          .Where(entry => entry.Entity.RepositoryId == placement.Id
                              && entry.Entity.Generation == placement.CurrentGeneration))
             {
-                jobEntry.Entity.Status = ReplicationJobStatus.Processing;
+                jobEntry.Entity.Status = EReplicationJobStatus.Processing;
                 jobEntry.Entity.LockedUntil = reservedUntil;
             }
 
@@ -133,12 +139,13 @@ internal sealed class GitSmartHttpService(
         CancellationToken cancellationToken)
     {
         var requiredCopies = replicationOptions.Value.WriteQuorum;
-        if (requiredCopies > cluster.Nodes.Count)
+        var nodes = await cluster.GetNodesAsync(placement.StorageClusterId, cancellationToken);
+        if (requiredCopies > nodes.Count)
         {
             await ReleaseReservedJobsAsync(dbContext, placement.Id, placement.CurrentGeneration,
                 cancellationToken);
             throw new InvalidOperationException(
-                $"WriteQuorum ({requiredCopies}) exceeds the configured storage node count ({cluster.Nodes.Count}).");
+                $"WriteQuorum ({requiredCopies}) exceeds the active storage node count ({nodes.Count}).");
         }
 
         if (requiredCopies == 1)
@@ -151,7 +158,7 @@ internal sealed class GitSmartHttpService(
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(replicationOptions.Value.WriteQuorumTimeoutSeconds));
         var currentCopies = 1;
-        foreach (var targetNode in cluster.Nodes.Where(item => item.Name != sourceNode.Name))
+        foreach (var targetNode in nodes.Where(item => item.Name != sourceNode.Name))
         {
             var replica = placement.Replicas.Single(item => item.StorageNode == targetNode.Name);
             var job = await dbContext.ReplicationJobs.SingleAsync(item =>
@@ -159,9 +166,9 @@ internal sealed class GitSmartHttpService(
                 && item.Generation == placement.CurrentGeneration
                 && item.TargetNode == targetNode.Name,
                 cancellationToken);
-            replica.Status = RepositoryReplicaStatus.Replicating;
+            replica.Status = ERepositoryReplicaStatus.Replicating;
             replica.LastAttemptAt = DateTimeOffset.UtcNow;
-            job.Status = ReplicationJobStatus.Processing;
+            job.Status = EReplicationJobStatus.Processing;
             job.Attempt++;
             job.LockedUntil = DateTimeOffset.UtcNow.AddSeconds(replicationOptions.Value.LeaseSeconds);
             await dbContext.SaveChangesAsync(cancellationToken);
@@ -177,11 +184,11 @@ internal sealed class GitSmartHttpService(
                 }
 
                 replica.AppliedGeneration = placement.CurrentGeneration;
-                replica.Status = RepositoryReplicaStatus.Healthy;
+                replica.Status = ERepositoryReplicaStatus.Healthy;
                 replica.RefsHash = targetState.RefsHash;
                 replica.LastSuccessfulReplicationAt = DateTimeOffset.UtcNow;
                 replica.LastError = null;
-                job.Status = ReplicationJobStatus.Completed;
+                job.Status = EReplicationJobStatus.Completed;
                 job.CompletedAt = DateTimeOffset.UtcNow;
                 job.LockedUntil = null;
                 job.LastError = null;
@@ -197,9 +204,9 @@ internal sealed class GitSmartHttpService(
             catch (Exception exception) when (exception is not OperationCanceledException
                 || !cancellationToken.IsCancellationRequested)
             {
-                replica.Status = RepositoryReplicaStatus.Unavailable;
+                replica.Status = ERepositoryReplicaStatus.Unavailable;
                 replica.LastError = exception.Message;
-                job.Status = ReplicationJobStatus.Retry;
+                job.Status = EReplicationJobStatus.Retry;
                 job.NextAttemptAt = DateTimeOffset.UtcNow.AddSeconds(5);
                 job.LockedUntil = null;
                 job.LastError = exception.Message;
@@ -223,11 +230,11 @@ internal sealed class GitSmartHttpService(
         var reservedJobs = await dbContext.ReplicationJobs
             .Where(item => item.RepositoryId == repositoryId
                 && item.Generation == generation
-                && item.Status == ReplicationJobStatus.Processing)
+                && item.Status == EReplicationJobStatus.Processing)
             .ToArrayAsync(cancellationToken);
         foreach (var job in reservedJobs)
         {
-            job.Status = ReplicationJobStatus.Pending;
+            job.Status = EReplicationJobStatus.Pending;
             job.LockedUntil = null;
             job.NextAttemptAt = DateTimeOffset.UtcNow;
         }
@@ -273,11 +280,14 @@ internal sealed class GitSmartHttpService(
         CancellationToken cancellationToken)
     {
         var currentNodes = placement.Replicas
-            .Where(item => item.Status == RepositoryReplicaStatus.Healthy
+            .Where(item => item.Status == ERepositoryReplicaStatus.Healthy
                 && item.AppliedGeneration == placement.CurrentGeneration)
             .OrderByDescending(item => item.StorageNode == placement.Storage)
             .Select(item => item.StorageNode);
-        return await cluster.GetFirstHealthyNodeAsync(currentNodes, cancellationToken)
+        return await cluster.GetFirstHealthyNodeAsync(
+            placement.StorageClusterId,
+            currentNodes,
+            cancellationToken)
             ?? throw new HttpRequestException(
                 $"No healthy current replica is available for repository '{placement.Name}'.");
     }

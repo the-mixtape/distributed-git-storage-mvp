@@ -18,7 +18,6 @@ public static class StartupExtensions
             ?? throw new InvalidOperationException("PostgreSql connection string is missing.");
 
         services.AddDbContextFactory<DistributedGitStorageDbContext>(options => options.UseNpgsql(connectionString));
-        services.Configure<GitClusterOptions>(configuration.GetSection("GitCluster"));
         services.AddOptions<ReplicationOptions>()
             .Bind(configuration.GetSection("Replication"))
             .Validate(options => options.WriteQuorum > 0, "WriteQuorum must be greater than zero.")
@@ -29,6 +28,7 @@ public static class StartupExtensions
         services.AddSingleton<IRepositoryService, RepositoryService>();
         services.AddSingleton<IGitSmartHttpService, GitSmartHttpService>();
         services.AddSingleton<IReplicationService, ReplicationService>();
+        services.AddSingleton<IStorageTopologyService, StorageTopologyService>();
         services.AddHostedService<ReplicationWorker>();
         services.AddHttpClient("GitStorageNode", client =>
         {

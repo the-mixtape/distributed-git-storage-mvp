@@ -16,7 +16,7 @@ MVP собственного распределённого Git-хранилищ
 - автоматический failover и восстановление отставших узлов;
 - сериализация конкурентных `push` для одного репозитория;
 - write quorum: подтверждение `push` после двух актуальных физических копий;
-- placement, replica state и replication jobs в PostgreSQL;
+- кластеры, узлы, placement, replica state и replication jobs в PostgreSQL;
 - health checks и автоматические тесты.
 
 ## Архитектура
@@ -54,6 +54,34 @@ Readiness: <http://localhost:5080/health/ready>
 Состояние реплик доступно через `GET /repositories/{id}/replicas`, очередь — через
 `GET /replication/jobs`. Повторить неуспешное задание вручную можно запросом
 `POST /replication/jobs/{id}/retry`.
+
+Топология хранения больше не задаётся в `appsettings.json`. Кластеры и узлы хранятся
+в PostgreSQL и доступны через `GET /storage-clusters`. Управлять ими можно через
+`POST /storage-clusters`, `POST /storage-clusters/{id}/nodes` и
+`PUT /storage-clusters/{id}`, `PUT /storage-clusters/{id}/nodes/{nodeId}`.
+
+После первого запуска топология пуста. Кластер и узлы добавляются явно до создания репозиториев:
+
+```powershell
+$cluster = Invoke-RestMethod -Method Post `
+  -Uri http://localhost:5080/storage-clusters `
+  -ContentType application/json `
+  -Body '{"name":"main-cluster"}'
+
+1..3 | ForEach-Object {
+  $name = "storage-$_"
+  Invoke-RestMethod -Method Post `
+    -Uri "http://localhost:5080/storage-clusters/$($cluster.id)/nodes" `
+    -ContentType application/json `
+    -Body (@{
+      name = $name
+      address = "http://${name}:8080"
+      internalAddress = "http://${name}:8080"
+    } | ConvertTo-Json)
+}
+```
+
+До добавления хотя бы одного активного узла `/health/ready` закономерно возвращает ошибку готовности.
 
 По умолчанию `Replication:WriteQuorum` равен `2`, а ожидание ограничено
 `Replication:WriteQuorumTimeoutSeconds`. При недостижении quorum клиент не получает

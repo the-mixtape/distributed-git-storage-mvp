@@ -9,6 +9,8 @@ public sealed class DistributedGitStorageDbContext(DbContextOptions<DistributedG
     public DbSet<RepositoryPlacement> RepositoryPlacements => Set<RepositoryPlacement>();
     public DbSet<RepositoryReplica> RepositoryReplicas => Set<RepositoryReplica>();
     public DbSet<ReplicationJob> ReplicationJobs => Set<ReplicationJob>();
+    public DbSet<StorageCluster> StorageClusters => Set<StorageCluster>();
+    public DbSet<StorageNode> StorageNodes => Set<StorageNode>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -5,13 +5,13 @@
 ## Components
 
 - **Web Control Plane** stores placement, exposes the REST API, and owns the public Git URL `/{name}.git`.
-- **PostgreSQL** stores placement, current generation, replica state, and the replication queue.
+- **PostgreSQL** stores clusters and nodes, placement, current generation, replica state, and the replication queue.
 - **Storage Node** stores bare repositories and exposes internal management and Git Smart HTTP endpoints.
 - **System Git** performs object database, ref, and packfile operations.
 
 ## Creation
 
-The Control Plane selects a primary using round-robin placement, creates the same bare repository on every node, and then saves placement in PostgreSQL. A database failure triggers compensating deletion.
+The Control Plane reads active topology from PostgreSQL, selects the active cluster with the fewest repositories, chooses its primary by round robin, creates the same bare repository on every active node in that cluster, and saves placement with `StorageClusterId`. A database failure triggers compensating deletion. Reconciliation discovers newly added active nodes and copies existing repositories belonging to their cluster.
 
 ## Reads
 

@@ -1,4 +1,5 @@
 using DistributedGitStorage.Data;
+using DistributedGitStorage.Data.Enums;
 using DistributedGitStorage.Data.Models;
 using DistributedGitStorage.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ internal sealed class ReplicationService(
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var job = await db.ReplicationJobs.SingleOrDefaultAsync(item => item.Id == jobId, cancellationToken)
             ?? throw new KeyNotFoundException($"Replication job '{jobId}' was not found.");
-        job.Status = ReplicationJobStatus.Pending;
+        job.Status = EReplicationJobStatus.Pending;
         job.NextAttemptAt = DateTimeOffset.UtcNow;
         job.LockedUntil = null;
         job.CompletedAt = null;
