@@ -40,12 +40,10 @@ ASP.NET Core Control Plane ------> PostgreSQL
 
 ## Запуск
 
-Требуются .NET 9, Git и Docker Desktop в режиме Linux containers.
+Для запуска стенда требуются Git и Docker Desktop в режиме Linux containers. .NET 9 нужен только для локальной разработки без контейнера.
 
 ```powershell
 docker compose up -d --build --wait
-dotnet restore src/DistributedGitStorage.sln
-dotnet run --project src/DistributedGitStorage.Web
 ```
 
 Swagger: <http://localhost:5080/swagger>
@@ -91,7 +89,7 @@ git clone http://localhost:5080/demo.git demo-clone
 
 | Сервис | Экземпляров | Host port | Назначение |
 |---|---:|---:|---|
-| ASP.NET Core Control Plane | 1 | 5080 | REST API и публичный Git Smart HTTP |
+| ASP.NET Core Control Plane | 1 | 5080 | REST API и публичный Git Smart HTTP; запускается в Compose |
 | PostgreSQL | 1 | 55632 | placement metadata |
 | C# Storage Node | 3 | 8081–8083 | bare Git repositories и внутренний Smart HTTP |
 

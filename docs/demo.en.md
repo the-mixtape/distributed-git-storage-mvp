@@ -7,7 +7,6 @@
 ```powershell
 docker compose up -d --build --wait
 docker compose ps
-dotnet run --project src/DistributedGitStorage.Web
 ```
 
 ## 2. Create and push

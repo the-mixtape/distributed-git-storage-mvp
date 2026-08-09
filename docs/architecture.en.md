@@ -37,6 +37,7 @@ The worker verifies that source and target fingerprints match. A matching copy b
 - an acknowledged push has at least `WriteQuorum` current physical copies;
 - stale copies are excluded from reads and cannot silently become primary;
 - the queue survives restarts and supports leases, retries, and reconciliation;
+- when an HTTP request is aborted, Git and its child processes are terminated before request resources are released;
 - C# delegates the internal Git object/pack format to installed Git.
 
 Replication up to quorum is synchronous; remaining copies are asynchronous. If quorum is not reached within `WriteQuorumTimeoutSeconds`, the client receives a Git protocol-level error containing the repository ID, generation, and current copy count. The primary may already have accepted refs, so the outcome is indeterminate until checked or safely retried; the durable queue keeps synchronizing in the background.

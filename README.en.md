@@ -40,12 +40,10 @@ Each storage node is an ASP.NET Core application that runs safely argumentized `
 
 ## Running locally
 
-.NET 9, Git, and Docker Desktop running Linux containers are required.
+Git and Docker Desktop running Linux containers are required for the complete stack. .NET 9 is only needed for local development outside a container.
 
 ```powershell
 docker compose up -d --build --wait
-dotnet restore src/DistributedGitStorage.sln
-dotnet run --project src/DistributedGitStorage.Web
 ```
 
 Swagger: <http://localhost:5080/swagger>
@@ -91,7 +89,7 @@ git clone http://localhost:5080/demo.git demo-clone
 
 | Service | Instances | Host port | Purpose |
 |---|---:|---:|---|
-| ASP.NET Core Control Plane | 1 | 5080 | REST API and public Git Smart HTTP |
+| ASP.NET Core Control Plane | 1 | 5080 | REST API and public Git Smart HTTP; runs in Compose |
 | PostgreSQL | 1 | 55632 | Placement metadata |
 | C# Storage Node | 3 | 8081–8083 | Bare Git repositories and internal Smart HTTP |
 
