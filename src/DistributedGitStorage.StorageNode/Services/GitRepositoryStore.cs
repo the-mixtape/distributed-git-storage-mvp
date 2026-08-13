@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text;
+using DistributedGitStorage.StorageNode.Models;
 
 namespace DistributedGitStorage.StorageNode.Services;
 
@@ -17,6 +19,30 @@ public sealed class GitRepositoryStore
     }
 
     public bool Exists(Guid repositoryId) => Directory.Exists(GetRepositoryPath(repositoryId));
+
+    public async Task<RepositoryStateResponse> GetStateAsync(
+        Guid repositoryId,
+        CancellationToken cancellationToken)
+    {
+        var repositoryPath = GetRepositoryPath(repositoryId);
+        if (!Directory.Exists(repositoryPath))
+        {
+            return new RepositoryStateResponse(false, null, null);
+        }
+
+        var refs = await RunGitCaptureAsync(
+            ["-C", repositoryPath, "for-each-ref", "--format=%(refname)%00%(objectname)"],
+            cancellationToken);
+        var normalizedRefs = string.Join('\n', refs
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Order(StringComparer.Ordinal));
+        var refsHash = Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(normalizedRefs)));
+        var head = (await RunGitCaptureAsync(
+            ["-C", repositoryPath, "symbolic-ref", "HEAD"],
+            cancellationToken)).Trim();
+        return new RepositoryStateResponse(true, refsHash, head);
+    }
 
     public async Task CreateAsync(Guid repositoryId, string defaultBranch, CancellationToken cancellationToken)
     {
@@ -123,10 +149,28 @@ public sealed class GitRepositoryStore
 
     private async Task RunGitAsync(IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {
+        _ = await RunGitCaptureAsync(arguments, cancellationToken);
+    }
+
+    private async Task<string> RunGitCaptureAsync(
+        IReadOnlyList<string> arguments,
+        CancellationToken cancellationToken)
+    {
         using var process = StartGit(arguments, gitProtocol: null);
-        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        await process.WaitForExitAsync(cancellationToken);
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
+        try
+        {
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch
+        {
+            await StopProcessAsync(process);
+            await ObserveFailureAsync(outputTask);
+            await ObserveFailureAsync(errorTask);
+            throw;
+        }
+
         var output = await outputTask;
         var error = await errorTask;
         if (process.ExitCode != 0)
@@ -135,6 +179,7 @@ public sealed class GitRepositoryStore
         }
 
         _logger.LogDebug("Git command completed: {Output}", output.Trim());
+        return output;
     }
 
     private static async Task RunStreamingGitAsync(
@@ -145,19 +190,73 @@ public sealed class GitRepositoryStore
         CancellationToken cancellationToken)
     {
         using var process = StartGit(arguments, gitProtocol);
-        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
+        var errorTask = process.StandardError.ReadToEndAsync();
         var outputTask = process.StandardOutput.BaseStream.CopyToAsync(output, cancellationToken);
-        if (input != Stream.Null)
+        try
         {
-            await input.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
+            if (input != Stream.Null)
+            {
+                await input.CopyToAsync(process.StandardInput.BaseStream, cancellationToken);
+            }
+
+            process.StandardInput.Close();
+            await Task.WhenAll(outputTask, process.WaitForExitAsync(cancellationToken));
+        }
+        catch
+        {
+            await StopProcessAsync(process);
+            await ObserveFailureAsync(outputTask);
+            await ObserveFailureAsync(errorTask);
+            throw;
+        }
+        finally
+        {
+            process.StandardInput.Close();
         }
 
-        process.StandardInput.Close();
-        await Task.WhenAll(outputTask, process.WaitForExitAsync(cancellationToken));
         var error = await errorTask;
         if (process.ExitCode != 0)
         {
             throw new InvalidOperationException($"Git RPC failed: {error}");
+        }
+    }
+
+    private static async Task StopProcessAsync(Process process)
+    {
+        try
+        {
+            process.StandardInput.Close();
+            if (!process.HasExited)
+            {
+                process.Kill(entireProcessTree: true);
+            }
+        }
+        catch (Exception exception) when (exception is InvalidOperationException
+            or System.ComponentModel.Win32Exception
+            or NotSupportedException)
+        {
+            // The process exited between the state check and the kill request.
+        }
+
+        try
+        {
+            await process.WaitForExitAsync(CancellationToken.None);
+        }
+        catch (InvalidOperationException)
+        {
+            // The process is already unavailable; there is nothing left to wait for.
+        }
+    }
+
+    private static async Task ObserveFailureAsync(Task task)
+    {
+        try
+        {
+            await task;
+        }
+        catch
+        {
+            // Preserve the original exception that initiated process termination.
         }
     }
 

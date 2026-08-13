@@ -10,11 +10,13 @@ MVP собственного распределённого Git-хранилищ
 
 - создание bare-репозитория через REST API;
 - стандартные `git push`, `clone`, `fetch` и `pull`;
-- синхронная репликация refs на три C# storage node;
-- автоматический выбор доступной реплики;
-- смена primary после записи во время отказа;
-- восстановление отставшего узла при следующей записи;
-- placement metadata в PostgreSQL;
+- фоновая репликация через постоянную очередь заданий;
+- учёт поколения и состояния каждой копии репозитория;
+- чтение только с актуальной healthy-реплики;
+- автоматический failover и восстановление отставших узлов;
+- сериализация конкурентных `push` для одного репозитория;
+- write quorum: подтверждение `push` после двух актуальных физических копий;
+- кластеры, узлы, placement, replica state и replication jobs в PostgreSQL;
 - health checks и автоматические тесты.
 
 ## Архитектура
@@ -38,18 +40,52 @@ ASP.NET Core Control Plane ------> PostgreSQL
 
 ## Запуск
 
-Требуются .NET 9, Git и Docker Desktop в режиме Linux containers.
+Для запуска стенда требуются Git и Docker Desktop в режиме Linux containers. .NET 9 нужен только для локальной разработки без контейнера.
 
 ```powershell
 docker compose up -d --build --wait
-dotnet restore src/DistributedGitStorage.sln
-dotnet run --project src/DistributedGitStorage.Web
 ```
 
 Swagger: <http://localhost:5080/swagger>
 Readiness: <http://localhost:5080/health/ready>
 
 При запуске Web-приложение автоматически применяет ожидающие EF Core migrations.
+
+Состояние реплик доступно через `GET /repositories/{id}/replicas`, очередь — через
+`GET /replication/jobs`. Повторить неуспешное задание вручную можно запросом
+`POST /replication/jobs/{id}/retry`.
+
+Топология хранения больше не задаётся в `appsettings.json`. Кластеры и узлы хранятся
+в PostgreSQL и доступны через `GET /storage-clusters`. Управлять ими можно через
+`POST /storage-clusters`, `POST /storage-clusters/{id}/nodes` и
+`PUT /storage-clusters/{id}`, `PUT /storage-clusters/{id}/nodes/{nodeId}`.
+
+После первого запуска топология пуста. Кластер и узлы добавляются явно до создания репозиториев:
+
+```powershell
+$cluster = Invoke-RestMethod -Method Post `
+  -Uri http://localhost:5080/storage-clusters `
+  -ContentType application/json `
+  -Body '{"name":"main-cluster"}'
+
+1..3 | ForEach-Object {
+  $name = "storage-$_"
+  Invoke-RestMethod -Method Post `
+    -Uri "http://localhost:5080/storage-clusters/$($cluster.id)/nodes" `
+    -ContentType application/json `
+    -Body (@{
+      name = $name
+      address = "http://${name}:8080"
+      internalAddress = "http://${name}:8080"
+    } | ConvertTo-Json)
+}
+```
+
+До добавления хотя бы одного активного узла `/health/ready` закономерно возвращает ошибку готовности.
+
+По умолчанию `Replication:WriteQuorum` равен `2`, а ожидание ограничено
+`Replication:WriteQuorumTimeoutSeconds`. При недостижении quorum клиент не получает
+успешного подтверждения, но сохранённые задания продолжают восстановление в фоне.
 
 ## Создание репозитория
 
@@ -81,7 +117,7 @@ git clone http://localhost:5080/demo.git demo-clone
 
 | Сервис | Экземпляров | Host port | Назначение |
 |---|---:|---:|---|
-| ASP.NET Core Control Plane | 1 | 5080 | REST API и публичный Git Smart HTTP |
+| ASP.NET Core Control Plane | 1 | 5080 | REST API и публичный Git Smart HTTP; запускается в Compose |
 | PostgreSQL | 1 | 55632 | placement metadata |
 | C# Storage Node | 3 | 8081–8083 | bare Git repositories и внутренний Smart HTTP |
 

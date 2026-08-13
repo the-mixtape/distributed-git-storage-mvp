@@ -14,7 +14,9 @@ internal sealed class GlobalExceptionHandler(
         {
             InvalidRepositoryNameException or ArgumentException => (StatusCodes.Status400BadRequest, "Invalid request"),
             RepositoryNotFoundException => (StatusCodes.Status404NotFound, "Repository not found"),
+            KeyNotFoundException => (StatusCodes.Status404NotFound, "Resource not found"),
             RepositoryAlreadyExistsException => (StatusCodes.Status409Conflict, "Repository already exists"),
+            WriteQuorumNotReachedException => (StatusCodes.Status503ServiceUnavailable, "Write quorum was not reached"),
             HttpRequestException => (StatusCodes.Status503ServiceUnavailable, "Git storage cluster is unavailable"),
             _ => (StatusCodes.Status500InternalServerError, "Unexpected server error")
         };

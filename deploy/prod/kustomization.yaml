@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: distributed-git-storage
+
+resources:
+  - namespace.yaml
+  - storage-nodes.yaml
+  - control-plane.yaml
+  - ingress.yaml
+  - disruption-budgets.yaml
+
+images:
+  - name: distributed-git-storage-control-plane
+    newName: registry.company.example/distributed-git-storage/control-plane
+    newTag: 0.1.0
+  - name: distributed-git-storage-node
+    newName: registry.company.example/distributed-git-storage/storage-node
+    newTag: 0.1.0

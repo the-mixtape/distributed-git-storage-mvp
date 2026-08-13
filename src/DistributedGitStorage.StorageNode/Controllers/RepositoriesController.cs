@@ -12,6 +12,15 @@ public sealed class RepositoriesController(GitRepositoryStore repositoryStore) :
     public IActionResult Exists(Guid repositoryId) =>
         repositoryStore.Exists(repositoryId) ? Ok() : NotFound();
 
+    [HttpGet("state")]
+    public async Task<ActionResult<RepositoryStateResponse>> GetState(
+        Guid repositoryId,
+        CancellationToken cancellationToken)
+    {
+        var state = await repositoryStore.GetStateAsync(repositoryId, cancellationToken);
+        return state.Exists ? Ok(state) : NotFound(state);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(
         Guid repositoryId,

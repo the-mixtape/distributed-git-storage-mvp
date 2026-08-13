@@ -14,9 +14,14 @@ internal sealed class RepositoryPlacementConfiguration : IEntityTypeConfiguratio
         builder.Property(item => item.Storage).HasMaxLength(100);
         builder.Property(item => item.StorageName).HasMaxLength(100);
         builder.Property(item => item.RelativePath).HasMaxLength(500);
+        builder.Property(item => item.CurrentGeneration).HasDefaultValue(0L);
 
         builder.HasIndex(item => item.Name)
             .IsUnique()
             .HasDatabaseName("uq_repository_placements_name");
+        builder.HasOne(item => item.StorageCluster)
+            .WithMany(item => item.RepositoryPlacements)
+            .HasForeignKey(item => item.StorageClusterId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

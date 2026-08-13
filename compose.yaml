@@ -1,6 +1,29 @@
 name: distributed-git-storage
 
 services:
+  control-plane:
+    build:
+      context: .
+      dockerfile: src/DistributedGitStorage.Web/Dockerfile
+    ports:
+      - "5080:8080"
+    environment:
+      ConnectionStrings__PostgreSql: Host=postgres;Port=5432;Database=gitserver;Username=gitserver;Password=gitserver
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage-1:
+        condition: service_healthy
+      storage-2:
+        condition: service_healthy
+      storage-3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/health/live"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
   postgres:
     image: postgres:16-alpine
     environment:

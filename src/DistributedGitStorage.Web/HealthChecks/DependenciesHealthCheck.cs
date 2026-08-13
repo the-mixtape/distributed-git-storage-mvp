@@ -1,15 +1,12 @@
 using DistributedGitStorage.Data;
-using DistributedGitStorage.Services.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
 
 namespace DistributedGitStorage.Web.HealthChecks;
 
 internal sealed class DependenciesHealthCheck(
     IDbContextFactory<DistributedGitStorageDbContext> dbContextFactory,
-    IHttpClientFactory httpClientFactory,
-    IOptions<GitClusterOptions> options) : IHealthCheck
+    IHttpClientFactory httpClientFactory) : IHealthCheck
 {
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
@@ -19,7 +16,14 @@ internal sealed class DependenciesHealthCheck(
             if (!await db.Database.CanConnectAsync(cancellationToken))
                 return HealthCheckResult.Unhealthy("Application PostgreSQL is unavailable.");
 
-            foreach (var node in options.Value.Nodes)
+            var nodes = await db.StorageNodes
+                .AsNoTracking()
+                .Where(item => item.IsActive && item.StorageCluster.IsActive)
+                .ToArrayAsync(cancellationToken);
+            if (nodes.Length == 0)
+                return HealthCheckResult.Unhealthy("No active storage nodes are configured in PostgreSQL.");
+
+            foreach (var node in nodes)
             {
                 var client = httpClientFactory.CreateClient("GitStorageNode");
                 using var response = await client.GetAsync(

@@ -7,7 +7,6 @@
 ```powershell
 docker compose up -d --build --wait
 docker compose ps
-dotnet run --project src/DistributedGitStorage.Web
 ```
 
 ## 2. Создание и push
@@ -16,7 +15,14 @@ dotnet run --project src/DistributedGitStorage.Web
 
 ## 3. Проверка реплик
 
-Взять `id` из ответа API, убрать дефисы и проверить SHA:
+Взять `id` из ответа API и дождаться, пока все копии получат текущее поколение и статус `Healthy`:
+
+```powershell
+Invoke-RestMethod http://localhost:5080/repositories/ID/replicas
+Invoke-RestMethod http://localhost:5080/replication/jobs
+```
+
+Для непосредственной проверки Git убрать дефисы из `id` и сравнить SHA:
 
 ```powershell
 docker compose exec -T storage-1 git -C /var/lib/git/repositories/ID.git rev-parse refs/heads/main
@@ -35,15 +41,15 @@ git -C demo-source commit --allow-empty -m "Commit during outage"
 git -C demo-source push origin main
 ```
 
-В `GET /repositories` primary изменится на `storage-2`.
+После push новая primary-нода сохраняется в `GET /repositories`, а задания для остальных нод появляются в `GET /replication/jobs`.
 
 ## 5. Восстановление
 
 ```powershell
 docker compose start storage-1
 docker compose up -d --wait storage-1
-git -C demo-source commit --allow-empty -m "Synchronize recovered replica"
-git -C demo-source push origin main
 ```
 
-Повторная проверка SHA покажет одинаковое состояние трёх узлов.
+Новый push не требуется: background worker автоматически повторит задание. В `GET /repositories/ID/replicas` восстановленная копия перейдёт в `Healthy` и получит текущее поколение. Повторная проверка SHA покажет одинаковое состояние трёх узлов.
+
+Чтобы продемонстрировать защиту от устаревшего чтения, можно остановить все актуальные копии до завершения восстановления. `git clone` получит `503`, но не данные от отставшей ноды.
